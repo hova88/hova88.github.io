@@ -1,0 +1,311 @@
+/* Bande dessinée layout — The Very Pulse of the Machine */
+
+#main.post.comic-post {
+  max-width: 980px;
+  counter-reset: comic-panel;
+}
+
+#main.post.comic-post .post-heading {
+  margin-bottom: 2.5rem;
+}
+
+#main.post.comic-post .post-title {
+  max-width: 100%;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+}
+
+#main.post.comic-post .post-subtitle {
+  font-size: 1.15rem;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#main.post.comic-post .publish-metadata {
+  margin-bottom: 0;
+}
+
+.comic-body {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 var(--content-pad) 4rem;
+}
+
+/* ── Acts (timeline chapters) ─────────────────────────────── */
+.comic-act {
+  margin-bottom: 3.5rem;
+}
+
+.comic-act__label {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg4) 18%, transparent);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg4);
+}
+
+.comic-act__num {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg3);
+}
+
+.comic-act__title {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--fg2);
+}
+
+/* ── Interstitial (text-only beats) ───────────────────────── */
+.comic-beat {
+  margin: 2.5rem 0;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.comic-beat__glyph {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  letter-spacing: 0.35em;
+  color: var(--fg4);
+  margin-bottom: 0.75rem;
+}
+
+.comic-beat__text {
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--fg2);
+  max-width: 22rem;
+  margin: 0 auto;
+}
+
+.comic-beat__text em {
+  font-style: normal;
+  color: var(--fg);
+}
+
+.comic-beat--wide .comic-beat__text {
+  max-width: 32rem;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.comic-beat--morse .comic-beat__text {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  max-width: 36rem;
+}
+
+/* ── Panel grid ───────────────────────────────────────────── */
+.comic-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.comic-grid--1 {
+  grid-template-columns: 1fr;
+}
+
+.comic-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.comic-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.comic-grid--hero-side {
+  grid-template-columns: 1.55fr 1fr;
+  align-items: stretch;
+}
+
+.comic-grid--stack-right {
+  grid-template-columns: 1fr 1fr;
+}
+
+.comic-grid--stack-right .comic-panel:first-child {
+  grid-row: span 2;
+}
+
+/* ── Single panel ─────────────────────────────────────────── */
+.comic-panel {
+  counter-increment: comic-panel;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1.5px solid color-mix(in srgb, var(--fg) 88%, transparent);
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--fg4) 12%, transparent);
+}
+
+.comic-panel--bleed {
+  border-left: none;
+  border-right: none;
+  margin-left: calc(-1 * var(--content-pad));
+  margin-right: calc(-1 * var(--content-pad));
+  box-shadow: none;
+  border-width: 1.5px 0;
+}
+
+.comic-panel__frame {
+  position: relative;
+  overflow: hidden;
+  background: #0a0a0a;
+  line-height: 0;
+}
+
+.comic-panel__frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.comic-panel--tall .comic-panel__frame img {
+  min-height: 100%;
+  object-fit: cover;
+}
+
+.comic-panel__caption {
+  padding: 0.65rem 0.85rem 0.75rem;
+  border-top: 1.5px solid color-mix(in srgb, var(--fg) 88%, transparent);
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--fg2);
+  background: var(--bg);
+}
+
+.comic-panel__caption strong {
+  font-weight: 600;
+  color: var(--fg);
+  font-style: normal;
+}
+
+.comic-panel__caption .voice {
+  font-style: italic;
+  color: var(--fg3);
+}
+
+.comic-panel__caption .symbol {
+  font-family: var(--font-sans);
+  letter-spacing: 0.2em;
+  color: var(--fg4);
+  font-size: 0.8rem;
+}
+
+.comic-panel__idx {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.15rem 0.4rem;
+}
+
+.comic-panel__idx::before {
+  content: counter(comic-panel, decimal-leading-zero);
+}
+
+/* ── Speech bubble (BD style) ─────────────────────────────── */
+.comic-balloon {
+  position: relative;
+  margin: 1.25rem auto 0;
+  max-width: 14rem;
+  padding: 0.55rem 0.85rem;
+  border: 1.5px solid var(--fg);
+  border-radius: 2px;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-style: italic;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.comic-balloon::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: var(--fg);
+  border-bottom: none;
+}
+
+.comic-balloon::before {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  border: 6px solid transparent;
+  border-top-color: var(--bg);
+  border-bottom: none;
+}
+
+/* ── Credits strip ────────────────────────────────────────── */
+.comic-credits {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--fg4) 15%, transparent);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--fg4);
+}
+
+.comic-credits a {
+  color: var(--fg3);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .comic-grid--2,
+  .comic-grid--3,
+  .comic-grid--hero-side,
+  .comic-grid--stack-right {
+    grid-template-columns: 1fr;
+  }
+
+  .comic-grid--stack-right .comic-panel:first-child {
+    grid-row: auto;
+  }
+
+  .comic-panel--bleed {
+    margin-left: -0.33rem;
+    margin-right: -0.33rem;
+  }
+
+  .comic-beat__glyph {
+    letter-spacing: 0.2em;
+  }
+}
+
+@media (min-width: 900px) {
+  #main.post.comic-post .post-content-shell,
+  #main.post.comic-post .left-toc {
+    display: none;
+  }
+}
