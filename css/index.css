@@ -29,17 +29,6 @@
   margin: 0;
 }
 
-#main.index.list.section-blog > .content {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  color: var(--fg4);
-  padding-top: 0.75rem;
-}
-
-#main.index.list .content p {
-  margin: 0;
-}
-
 /* Post list */
 #main.index .post-group ul {
   list-style: none;

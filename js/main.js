@@ -1,47 +1,6 @@
 (function () {
   'use strict';
 
-  /* Mobile menu */
-  var toggle = document.getElementById('menu-toggle');
-  var menu = document.getElementById('mobile-menu');
-
-  if (toggle && menu) {
-    function setMenuOpen(open) {
-      toggle.classList.toggle('is-active', open);
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-      document.body.classList.toggle('menu-open', open);
-
-      if (open) {
-        menu.removeAttribute('hidden');
-        menu.setAttribute('aria-hidden', 'false');
-        requestAnimationFrame(function () {
-          menu.classList.add('open');
-        });
-      } else {
-        menu.classList.remove('open');
-        menu.setAttribute('aria-hidden', 'true');
-        menu.addEventListener('transitionend', function onEnd(e) {
-          if (e.propertyName === 'opacity' && !menu.classList.contains('open')) {
-            menu.setAttribute('hidden', '');
-            menu.removeEventListener('transitionend', onEnd);
-          }
-        });
-      }
-    }
-
-    toggle.addEventListener('click', function () {
-      setMenuOpen(!toggle.classList.contains('is-active'));
-    });
-
-    menu.querySelectorAll('a').forEach(function (link) {
-      link.addEventListener('click', function () {
-        setMenuOpen(false);
-      });
-    });
-  }
-
-  /* Back to top */
   var backToTop = document.getElementById('back-to-top');
   if (backToTop) {
     backToTop.addEventListener('click', function (e) {
@@ -50,7 +9,6 @@
     });
   }
 
-  /* TOC scroll spy */
   var toc = document.querySelector('.left-toc');
   if (!toc) return;
 
