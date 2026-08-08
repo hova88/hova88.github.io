@@ -7,16 +7,40 @@
   <meta name="description" content="Interactive books and reading projects by hova88.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/index.css">
   <link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
   <div id="wrapper">
+    <header id="header">
+      <div id="site-header" class="site-header">
+        <div class="navbar-logo">
+          <a href="/" class="logo-handwritten">hova</a>
+        </div>
+        <div class="nav-group">
+          <nav class="top-nav" aria-label="Primary">
+            <a href="/book/" aria-current="page">Book</a>
+            <a href="/vis/">Vis</a>
+            <a href="/">Blog</a>
+          </nav>
+          <button id="menu-toggle" class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <div id="mobile-menu" class="mobile-menu-overlay" hidden aria-hidden="true">
+        <nav class="mobile-menu-nav" aria-label="Mobile">
+          <a href="/book/" aria-current="page">Book</a>
+          <a href="/vis/">Vis</a>
+          <a href="/">Blog</a>
+        </nav>
+      </div>
+    </header>
+
     <main id="main" class="index list">
-      <p class="section-back"><a href="/">← hova</a></p>
-      <h1 class="section-page-title">Book</h1>
+      <h1 class="blog-page-title">Book</h1>
       <div class="post-group">
         <ul>
           <li>
@@ -47,5 +71,6 @@
       </div>
     </footer>
   </div>
+  <script src="/js/main.js" defer></script>
 </body>
 </html>

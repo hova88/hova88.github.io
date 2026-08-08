@@ -129,9 +129,9 @@
   grid-column: 1;
   justify-self: end;
   position: sticky;
-  top: 2rem;
+  top: calc(var(--site-header-height) + 2rem);
   width: calc(var(--toc-width) + var(--toc-chevron-gutter));
-  max-height: calc(100vh - 3rem);
+  max-height: calc(100vh - var(--site-header-height) - 3rem);
   margin: 0 var(--toc-gap) 0 0;
   padding-left: var(--toc-chevron-gutter);
   overflow-y: auto;
