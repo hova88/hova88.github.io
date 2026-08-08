@@ -216,6 +216,22 @@
   top: -0.4rem;
 }
 
+#main.post .sidenote img {
+  display: block;
+  width: 100%;
+  margin-top: 0.65rem;
+  border-radius: 2px;
+}
+
+#main.post .sidenote .sidenote-caption {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--fg5);
+  line-height: 1.35;
+}
+
 .margin-toggle {
   display: none;
 }
