@@ -1,0 +1,161 @@
+/* Prose typography — article body */
+
+.content a {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg4) 30%, transparent);
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.content a:hover {
+  color: var(--fg2);
+  text-decoration-color: color-mix(in srgb, var(--fg2) 30%, transparent);
+}
+
+.content p,
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content pre,
+.content blockquote,
+.content table,
+.content figure,
+.content ul,
+.content ol {
+  margin-top: 0;
+  margin-bottom: 1.333rem;
+}
+
+#main.post article.content p {
+  margin-bottom: 1.45rem;
+}
+
+.content h2 {
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 1.25em;
+}
+
+.content h3 {
+  font-size: 1.35rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.4;
+  margin-top: 1.25em;
+}
+
+.content h4 {
+  font-size: 0.97rem;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.content ul {
+  list-style: square;
+  margin-left: 1.5rem;
+}
+
+.content ol {
+  list-style: decimal;
+  margin-left: 2rem;
+}
+
+.content li + li {
+  margin-top: 0.2rem;
+}
+
+.content blockquote:not(.epigraph) {
+  border-left: 2px solid color-mix(in srgb, var(--fg4) 35%, var(--bg) 65%);
+  color: var(--fg2);
+  margin: 1.6rem 0 1.6rem 1rem;
+  padding: 0.1rem 0 0.1rem 1.25rem;
+}
+
+.content code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--red);
+  padding: 0 0.2rem;
+}
+
+.content pre {
+  background: var(--bg-code) !important;
+  border-radius: 0.45rem;
+  overflow-x: auto;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.content pre code {
+  color: var(--fg3);
+  padding: 0;
+  white-space: pre;
+}
+
+.content figure {
+  margin: 2rem 0;
+}
+
+.content figure img {
+  margin: 0 auto;
+  border-radius: 2px;
+}
+
+.content figcaption {
+  margin-top: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--fg4);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.content table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+.content th,
+.content td {
+  border: 1px solid var(--fg4);
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 18ch;
+}
+
+.content th {
+  background: #fafafa;
+  font-weight: 500;
+}
+
+.content .katex-display {
+  margin: 1.75rem 0;
+  overflow-x: auto;
+}
+
+.content hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--fg4) 15%, transparent);
+  margin: 2.5rem 0;
+}
+
+.design-label {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--fg4) 8%, transparent);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg4);
+}

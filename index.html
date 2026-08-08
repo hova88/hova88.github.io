@@ -1,84 +1,60 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notes — hova88</title>
-  <meta name="description" content="Personal notes on machine learning, systems, and things worth writing down.">
+  <meta name="description" content="Personal writing on machine learning, systems, and experiments.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=IBM+Plex+Mono&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/typography.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="site-header__inner">
-      <a href="index.html" class="site-title">hova88</a>
-      <nav aria-label="Site">
-        <ul class="site-nav">
-          <li><a href="index.html" aria-current="page">Notes</a></li>
-          <li><a href="https://github.com/hova88" target="_blank" rel="noopener">GitHub</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+  <div id="wrapper">
+    <header id="header">
+      <div id="site-header" class="site-header">
+        <div class="navbar-logo">
+          <a href="/">HOVA88</a>
+        </div>
+        <div class="nav-group">
+          <nav class="top-nav" aria-label="Primary">
+            <a href="/" aria-current="page">Notes</a>
+            <a href="https://github.com/hova88" target="_blank" rel="noopener">GitHub</a>
+          </nav>
+          <button id="menu-toggle" class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <div id="mobile-menu" class="mobile-menu-overlay" hidden aria-hidden="true">
+        <nav class="mobile-menu-nav" aria-label="Mobile">
+          <a href="/">Notes</a>
+          <a href="https://github.com/hova88" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
 
-  <main class="page">
-    <section class="blog-hero">
-      <h1 class="blog-hero__title">Notes</h1>
-      <p class="blog-hero__subtitle">Writing things down — ML, systems, and experiments.</p>
-    </section>
+    <main id="main" class="index list section-blog">
+      <h1 class="blog-page-title">Notes</h1>
+      <div class="content">
+        <p>Personal writing on machine learning, systems, and experiments.</p>
+      </div>
+      <div class="post-group post-group--empty">
+        <ul><!-- posts go here --></ul>
+        <p>Nothing published yet.</p>
+      </div>
+    </main>
 
-    <aside class="profile-strip">
-      <img
-        class="profile-strip__avatar"
-        src="https://github.com/hova88.png"
-        alt="hova88"
-        width="56"
-        height="56"
-      >
-      <p class="profile-strip__bio">
-        Yan haixu — The tarnished will soon return.
+    <footer id="footer">
+      <div class="footer-inner">
+        <span>hova88 © 2026</span>
         <a href="https://github.com/hova88">GitHub</a>
-      </p>
-    </aside>
-
-    <ul class="post-list">
-      <li class="post-list__item">
-        <a class="post-list__link" href="blog/lora-notes.html">
-          <time class="post-list__date" datetime="2026-08-08">Aug 8, 2026</time>
-          <div class="post-list__content">
-            <h2 class="post-list__title">LoRA Without Regret — Reading Notes</h2>
-            <p class="post-list__meta">hova88</p>
-          </div>
-        </a>
-      </li>
-      <li class="post-list__item">
-        <a class="post-list__link" href="blog/planner-grpo.html">
-          <time class="post-list__date" datetime="2026-07-15">Jul 15, 2026</time>
-          <div class="post-list__content">
-            <h2 class="post-list__title">Planner GRPO with LoRA on UniAD</h2>
-            <p class="post-list__meta">hova88</p>
-          </div>
-        </a>
-      </li>
-      <li class="post-list__item">
-        <a class="post-list__link" href="blog/on-policy-distillation.html">
-          <time class="post-list__date" datetime="2026-06-02">Jun 2, 2026</time>
-          <div class="post-list__content">
-            <h2 class="post-list__title">On-Policy Distillation — A Short Primer</h2>
-            <p class="post-list__meta">hova88</p>
-          </div>
-        </a>
-      </li>
-    </ul>
-  </main>
-
-  <footer class="site-footer">
-    <div class="site-footer__inner">
-      <span>&copy; 2026 hova88</span>
-      <a href="https://github.com/hova88">github.com/hova88</a>
-    </div>
-  </footer>
+      </div>
+    </footer>
+  </div>
+  <script src="js/main.js" defer></script>
 </body>
 </html>

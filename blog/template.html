@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article Template — hova88</title>
+  <meta name="description" content="Layout reference for blog posts.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/post.css">
+  <link rel="stylesheet" href="../css/typography.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+  <div id="wrapper">
+    <header id="header">
+      <div id="site-header" class="site-header">
+        <div class="navbar-logo">
+          <a href="/">HOVA88</a>
+        </div>
+        <div class="nav-group">
+          <nav class="top-nav" aria-label="Primary">
+            <a href="/">Notes</a>
+            <a href="https://github.com/hova88" target="_blank" rel="noopener">GitHub</a>
+          </nav>
+          <button id="menu-toggle" class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <div id="mobile-menu" class="mobile-menu-overlay" hidden aria-hidden="true">
+        <nav class="mobile-menu-nav" aria-label="Mobile">
+          <a href="/">Notes</a>
+          <a href="https://github.com/hova88" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="post">
+      <div class="post-heading">
+        <h1 class="post-title">Article Title Goes Here</h1>
+        <p class="post-subtitle">Optional subtitle in italic serif</p>
+        <div class="publish-metadata">
+          <span class="author"><a href="https://github.com/hova88">Yan haixu</a></span>
+          <span>Aug 8, 2026</span>
+        </div>
+      </div>
+
+      <figure class="post-cover">
+        <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="800" height="320" fill="#f3f3f2"/>
+          <line x1="80" y1="240" x2="720" y2="240" stroke="#676767" stroke-width="1" opacity="0.35"/>
+          <path d="M80 240 C 200 80, 320 280, 440 160 S 640 60, 720 120" fill="none" stroke="#282828" stroke-width="1.5"/>
+          <circle cx="440" cy="160" r="4" fill="#282828"/>
+        </svg>
+        <figcaption>Figure placeholder — cover or lead illustration</figcaption>
+      </figure>
+
+      <div class="post-content-shell">
+        <nav class="left-toc" aria-label="Table of contents">
+          <ul>
+            <li><a href="#opening">Opening</a></li>
+            <li><a href="#typography">Typography</a></li>
+            <li><a href="#math-and-code">Math and code</a>
+              <ul>
+                <li><a href="#inline-math">Inline math</a></li>
+                <li><a href="#code-blocks">Code blocks</a></li>
+              </ul>
+            </li>
+            <li><a href="#sidenotes">Sidenotes</a></li>
+          </ul>
+        </nav>
+
+        <article class="content">
+          <span class="design-label">Layout reference — not published</span>
+
+          <p id="opening">
+            This page demonstrates the article layout: centered title block, optional cover,
+            left table of contents on wide screens, and a 660px prose column. Body text uses
+            Source Serif 4 at 17px with generous line height — the same restrained rhythm as
+            <a href="https://thinkingmachines.ai/blog/lora/" target="_blank" rel="noopener">Thinking Machines</a>.
+          </p>
+
+          <h2 id="typography">Typography</h2>
+          <p>
+            Section headings are semibold serif. Third-level headings drop to italic — a subtle
+            hierarchy without shouting. Links underline lightly; hover deepens the tone.
+          </p>
+          <blockquote>
+            Blockquotes sit on a thin left rule, secondary color, no background fill.
+          </blockquote>
+
+          <h2 id="math-and-code">Math and code</h2>
+          <h3 id="inline-math">Inline math</h3>
+          <p>
+            Low-rank adaptation replaces $W$ with $W' = W + \frac{\alpha}{r}BA$, keeping the
+            base weights frozen while training adapters.
+          </p>
+          <p>Display equations center in the column:</p>
+          <p>$$\mathcal{L} = -\sum_i \log p_\theta(y_i \mid x_i)$$</p>
+
+          <h3 id="code-blocks">Code blocks</h3>
+          <pre><code>def lora_forward(x, W, A, B, alpha, rank):
+    return W @ x + (alpha / rank) * (B @ (A @ x))</code></pre>
+
+          <h2 id="sidenotes">Sidenotes</h2>
+          <p>
+            On wide viewports, sidenotes float in the right margin.
+            <label for="sn1" class="sidenote-number"></label>
+            <input type="checkbox" id="sn1" class="margin-toggle">
+            <span class="sidenote">Margin notes for citations and asides — visible beside the paragraph on desktop, inline on mobile.</span>
+          </p>
+
+          <figure>
+            <svg viewBox="0 0 660 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="660" height="200" fill="#fafafa"/>
+              <rect x="40" y="40" width="580" height="120" fill="none" stroke="#d5d5d4" stroke-width="1"/>
+              <text x="330" y="108" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="14" fill="#676767">Inline figure</text>
+            </svg>
+            <figcaption>Caption centered below, 13px sans-serif in muted gray.</figcaption>
+          </figure>
+
+          <hr>
+
+          <p>Copy this file when publishing a new post. Remove the design label and update the index list.</p>
+        </article>
+      </div>
+
+      <div class="paginator">
+        <a href="/">← All notes</a>
+        <a href="#" id="back-to-top">Back to top</a>
+      </div>
+    </main>
+
+    <footer id="footer">
+      <div class="footer-inner">
+        <span>hova88 © 2026</span>
+        <a href="https://github.com/hova88">GitHub</a>
+      </div>
+    </footer>
+  </div>
+  <script src="../js/main.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    });
+  </script>
+</body>
+</html>
