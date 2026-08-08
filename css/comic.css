@@ -1,334 +1,301 @@
-/* Album BD — The Very Pulse of the Machine
-   French bande dessinée album: image-led, sparse text, clear chronology */
+/* Pulse album — continuous, compact, no chapters */
 
 :root {
-  --album-bg: #f7f5f0;
-  --album-ink: #1a1917;
-  --album-mute: #6e6a63;
-  --album-faint: #a39e96;
-  --album-rule: color-mix(in srgb, #1a1917 14%, transparent);
-  --album-max: 1080px;
-  --album-gutter: 10px;
+  --pulse-bg: #f4f2ec;
+  --pulse-ink: #141311;
+  --pulse-mute: #5c5852;
+  --pulse-faint: #9a958c;
+  --pulse-gap: 4px;
+  --pulse-max: 1040px;
 }
 
 body:has(.comic-post) {
-  background: var(--album-bg);
+  background: var(--pulse-bg);
+}
+
+body:has(.comic-post) #header .site-header,
+body:has(.comic-post) #footer {
+  background: var(--pulse-bg);
 }
 
 #main.post.comic-post {
-  max-width: var(--album-max);
-  counter-reset: planche;
+  max-width: var(--pulse-max);
 }
 
 #main.post.comic-post .post-heading {
   text-align: center;
-  margin: 1.5rem auto 3.5rem;
-  max-width: 36rem;
+  margin: 0.75rem auto 1.75rem;
+  max-width: 28rem;
 }
 
 #main.post.comic-post .post-title {
-  font-family: var(--font-serif);
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
   font-weight: 600;
-  font-size: clamp(1.65rem, 3.5vw, 2.1rem);
   letter-spacing: -0.02em;
-  max-width: none;
-  margin: 0 auto 0.75rem;
-  color: var(--album-ink);
+  margin: 0 0 0.35rem;
+  color: var(--pulse-ink);
 }
 
 #main.post.comic-post .post-subtitle {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-style: italic;
-  color: var(--album-mute);
-  margin: 0 auto 1.25rem;
-  max-width: 28rem;
-  line-height: 1.5;
+  color: var(--pulse-faint);
+  margin: 0 0 0.65rem;
 }
 
 #main.post.comic-post .publish-metadata {
   margin: 0;
-  color: var(--album-faint);
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--pulse-faint);
 }
 
 #main.post.comic-post .publish-metadata .author {
-  color: var(--album-mute);
+  color: var(--pulse-mute);
 }
 
-/* ── Album body ───────────────────────────────────────────── */
-.album {
-  max-width: var(--album-max);
+/* ── Stream ───────────────────────────────────────────────── */
+.pulse {
+  max-width: var(--pulse-max);
   margin: 0 auto;
-  padding: 0 clamp(0.75rem, 2vw, 1.5rem) 5rem;
+  padding: 0 clamp(0.5rem, 1.5vw, 1rem) 3.5rem;
 }
 
-/* Chronology spine */
-.album-spine {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.1rem;
-  justify-content: center;
-  margin: 0 auto 3.5rem;
-  max-width: 40rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--album-rule);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--album-faint);
+.pulse > * + * {
+  margin-top: var(--pulse-gap);
 }
 
-.album-spine a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.album-spine a:hover {
-  color: var(--album-ink);
-}
-
-/* Planche = album page / act */
-.planche {
-  margin-bottom: 4.5rem;
-  scroll-margin-top: calc(var(--site-header-height) + 1.5rem);
-}
-
-.planche__head {
+/* Filmstrip / consecutive frames */
+.clip {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.85rem;
-  align-items: baseline;
-  margin-bottom: 1.35rem;
+  gap: var(--pulse-gap);
+  width: 100%;
 }
 
-.planche__num {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: var(--album-ink);
-  font-variant-numeric: lining-nums;
+.clip--2 { grid-template-columns: repeat(2, 1fr); }
+.clip--3 { grid-template-columns: repeat(3, 1fr); }
+.clip--4 { grid-template-columns: repeat(4, 1fr); }
+.clip--5 { grid-template-columns: repeat(5, 1fr); }
+.clip--6 { grid-template-columns: repeat(6, 1fr); }
+
+.clip--breath {
+  margin-block: 0.65rem;
 }
 
-.planche__meta {
-  border-bottom: 1px solid var(--album-rule);
-  padding-bottom: 0.55rem;
-}
-
-.planche__title {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
-  font-style: italic;
-  color: var(--album-mute);
-  letter-spacing: 0.01em;
-}
-
-.planche__time {
-  display: block;
-  margin-top: 0.2rem;
-  font-family: var(--font-sans);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--album-faint);
-}
-
-/* Strip grids */
-.strip {
-  display: grid;
-  gap: var(--album-gutter);
-  margin-bottom: var(--album-gutter);
-}
-
-.strip--1 { grid-template-columns: 1fr; }
-.strip--2 { grid-template-columns: 1fr 1fr; }
-.strip--3 { grid-template-columns: 1fr 1fr 1fr; }
-.strip--21 { grid-template-columns: 1.4fr 1fr; }
-.strip--12 { grid-template-columns: 1fr 1.4fr; }
-
-/* Case = panel */
-.case {
+/* Single panel */
+.cell {
   position: relative;
-  background: #0c0c0c;
-  border: 1.75px solid var(--album-ink);
+  background: #0a0a0a;
+  border: 1.5px solid var(--pulse-ink);
   overflow: hidden;
   line-height: 0;
 }
 
-.case img {
+.cell img {
   width: 100%;
   height: auto;
   display: block;
-  vertical-align: top;
 }
 
-.case--splash {
-  border-width: 2px;
+.cell--splash {
+  border-width: 1.75px;
 }
 
-.case--tall img {
-  min-height: 100%;
-  object-fit: cover;
-  aspect-ratio: 3 / 4;
+.cell--inset {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 12%, transparent);
 }
 
-.case--silent::after {
-  content: none;
+/* Detail callout — blink-and-you-miss-it */
+.detail {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: var(--pulse-gap);
+  align-items: stretch;
+  margin-block: 0.55rem !important;
 }
 
-/* Recitatif = caption / philosophical fragment under panel */
-.recit {
-  margin: 0 0 var(--album-gutter);
-  padding: 0.55rem 0.15rem 0.15rem;
+.detail--flip {
+  grid-template-columns: 1fr 1.15fr;
+}
+
+.detail__note {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+  border: 1.5px solid var(--pulse-ink);
+  background: #fffcf7;
   font-family: var(--font-serif);
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: var(--album-mute);
+  color: var(--pulse-mute);
+  line-height: 1.4;
 }
 
-.recit--under {
-  margin-top: -2px;
-  margin-bottom: calc(var(--album-gutter) + 0.35rem);
-  padding: 0.65rem 0.75rem 0.7rem;
-  border: 1.75px solid var(--album-ink);
-  border-top: none;
-  background: #fffefb;
-  color: var(--album-ink);
+.detail__note .mark {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  color: var(--pulse-faint);
 }
 
-.recit em {
-  font-style: italic;
-  color: var(--album-ink);
-}
-
-.recit .glyph {
-  font-family: var(--font-serif);
-  letter-spacing: 0.28em;
-  color: var(--album-faint);
-  font-style: normal;
-}
-
-/* Interstice = text-only beat between planches */
-.interstice {
-  margin: 3rem auto;
-  max-width: 26rem;
-  text-align: center;
-  padding: 1.75rem 1rem;
-}
-
-.interstice__mark {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  letter-spacing: 0.45em;
-  color: var(--album-faint);
-  margin-bottom: 0.85rem;
-}
-
-.interstice__text {
-  font-family: var(--font-serif);
-  font-size: clamp(1.05rem, 2.2vw, 1.28rem);
-  font-style: italic;
-  line-height: 1.55;
-  color: var(--album-ink);
-}
-
-.interstice__text.roman {
-  font-style: normal;
+.detail__note .frag {
   font-size: 0.95rem;
-  letter-spacing: 0.02em;
-  color: var(--album-mute);
+  font-style: italic;
+  color: var(--pulse-ink);
 }
 
-.interstice--dark {
-  background: var(--album-ink);
-  color: var(--album-bg);
-  max-width: 100%;
-  padding: 2.75rem 1.5rem;
-  margin: 3.5rem 0;
+/* Micro beat — pulse between strips */
+.tick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 1.6rem;
+  margin-block: 0.55rem !important;
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--pulse-mute);
+  letter-spacing: 0.04em;
 }
 
-.interstice--dark .interstice__mark {
-  color: color-mix(in srgb, var(--album-bg) 45%, transparent);
+.tick .sym {
+  font-style: normal;
+  letter-spacing: 0.35em;
+  color: var(--pulse-faint);
+  font-size: 0.75rem;
 }
 
-.interstice--dark .interstice__text {
-  color: var(--album-bg);
-  max-width: 28rem;
-  margin: 0 auto;
+.tick--hard {
+  margin-block: 1.1rem !important;
+  color: var(--pulse-ink);
+  font-size: 1rem;
 }
 
-.interstice--morse .interstice__text {
+.tick--dark {
+  margin-block: 0.85rem !important;
+  padding: 1.1rem 0.75rem;
+  background: var(--pulse-ink);
+  color: var(--pulse-bg);
+  letter-spacing: 0.06em;
+}
+
+.tick--dark .sym {
+  color: color-mix(in srgb, var(--pulse-bg) 45%, transparent);
+}
+
+.tick--morse {
   font-family: var(--font-mono);
   font-style: normal;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  line-height: 1.7;
+  line-height: 1.55;
+  text-align: center;
+  max-width: 36rem;
+  margin-inline: auto;
 }
 
-/* Balloon */
-.balloon {
-  display: block;
-  width: fit-content;
-  max-width: 16rem;
-  margin: 1.5rem auto 2rem;
-  padding: 0.55rem 0.9rem;
-  border: 1.75px solid var(--album-ink);
-  background: #fffefb;
+/* Pair asymmetric */
+.duo {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: var(--pulse-gap);
+}
+
+.duo--rev {
+  grid-template-columns: 1fr 1.35fr;
+}
+
+/* Whisper under a splash */
+.whisper {
+  margin-top: 0 !important;
+  padding: 0.35rem 0.55rem 0.45rem;
+  border: 1.5px solid var(--pulse-ink);
+  border-top: none;
+  background: #fffcf7;
   font-family: var(--font-serif);
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-style: italic;
-  text-align: center;
-  color: var(--album-ink);
+  color: var(--pulse-mute);
   line-height: 1.35;
 }
 
-/* Colophon */
+.whisper em {
+  color: var(--pulse-ink);
+  font-style: italic;
+}
+
+/* Breathing accent — soft pulse on stream */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.9; }
+}
+
+.pulse::before {
+  content: "";
+  display: block;
+  width: 3px;
+  height: 3px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: var(--pulse-ink);
+  animation: pulse-glow 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse::before {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
 .colophon {
-  margin-top: 4rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--album-rule);
+  margin-top: 2rem !important;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--pulse-ink) 12%, transparent);
   font-family: var(--font-sans);
-  font-size: 11px;
-  line-height: 1.65;
-  color: var(--album-faint);
-  max-width: 36rem;
+  font-size: 10px;
+  line-height: 1.55;
+  color: var(--pulse-faint);
 }
 
 .colophon a {
-  color: var(--album-mute);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  color: var(--pulse-mute);
 }
 
 #main.post.comic-post .paginator {
-  border-top-color: var(--album-rule);
-  max-width: var(--album-max);
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: clamp(0.75rem, 2vw, 1.5rem);
-  padding-right: clamp(0.75rem, 2vw, 1.5rem);
+  max-width: var(--pulse-max);
+  margin: 1.5rem auto 0;
+  padding: 1rem clamp(0.5rem, 1.5vw, 1rem) 0;
+  border-top: 1px solid color-mix(in srgb, var(--pulse-ink) 12%, transparent);
+  font-size: 13px;
 }
 
 @media (max-width: 720px) {
-  .strip--2,
-  .strip--3,
-  .strip--21,
-  .strip--12 {
+  .clip--4,
+  .clip--5,
+  .clip--6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .detail,
+  .detail--flip,
+  .duo,
+  .duo--rev {
     grid-template-columns: 1fr;
   }
 
-  .case--tall img {
-    aspect-ratio: 16 / 10;
+  .tick--morse {
+    font-size: 0.55rem;
   }
+}
 
-  .planche {
-    margin-bottom: 3.25rem;
-  }
-
-  .album-spine {
-    gap: 0.4rem 0.85rem;
-    justify-content: flex-start;
+@media (max-width: 480px) {
+  .clip--3,
+  .clip--4,
+  .clip--5,
+  .clip--6 {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
