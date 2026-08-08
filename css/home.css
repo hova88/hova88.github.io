@@ -1,0 +1,116 @@
+/* Site hub — Blog / Book / Vis */
+
+#main.hub {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1170px) {
+  #main.hub,
+  #main.index {
+    padding-left: var(--content-pad);
+    padding-right: var(--content-pad);
+  }
+}
+
+.hub-title {
+  font-family: var(--font-sans);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  padding-top: 1rem;
+  margin: 0 0 2rem;
+}
+
+.hub-section {
+  max-width: 660px;
+  margin-bottom: 3rem;
+}
+
+.hub-section:last-of-type {
+  margin-bottom: 1rem;
+}
+
+.hub-section__heading {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg4);
+  margin: 0 0 0.75rem;
+}
+
+.hub-section__heading a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hub-section__heading a:hover {
+  color: var(--fg2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Section index pages share blog list styles */
+.section-page-title {
+  font-family: var(--font-sans);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  padding-top: 1rem;
+  margin: 0;
+}
+
+.section-back {
+  max-width: 660px;
+  margin: 0 0 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+
+.section-back a {
+  color: var(--fg4);
+  text-decoration: none;
+}
+
+.section-back a:hover {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Book / vis item meta line */
+.item-meta {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--fg4);
+  line-height: 1.45;
+}
+
+#main.index .post-group .post-item-link:hover .item-meta {
+  color: var(--fg3);
+}
+
+.section-note {
+  max-width: 660px;
+  padding-top: 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--fg4);
+  line-height: 1.55;
+}
+
+.section-note a {
+  color: var(--fg3);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--fg4) 30%, transparent);
+  text-underline-offset: 0.15em;
+}
+
+.section-note a:hover {
+  color: var(--fg2);
+}
