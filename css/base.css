@@ -243,6 +243,14 @@ body.menu-open {
   color: var(--fg4);
 }
 
+body:has(.comic-post) #footer {
+  background: var(--album-bg, #f7f5f0);
+}
+
+body:has(.comic-post) #header .site-header {
+  background: var(--album-bg, #f7f5f0);
+}
+
 .footer-inner {
   max-width: var(--content-max);
   margin: 0 auto;
