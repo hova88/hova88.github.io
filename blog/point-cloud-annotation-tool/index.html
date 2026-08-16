@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Designing for Flow: A Point-Cloud Annotation Tool — hova</title>
-  <meta name="description" content="A design case study of a point-cloud annotation studio built to reduce operator effort, accelerate learning, and keep annotation, review, repair, and acceptance in one continuous flow.">
+  <title>Designing the Point-Cloud Annotation Loop — hova</title>
+  <meta name="description" content="A design case study of a point-cloud annotation workspace that connects scene geometry, object tracks, frame-level quality state, repair, and final data acceptance.">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="Designing for Flow: A Point-Cloud Annotation Tool">
-  <meta property="og:description" content="How a dense 3D workflow became a calm, learnable studio for operators.">
-  <meta property="og:image" content="https://hova88.github.io/blog/point-cloud-annotation-tool/images/single-frame-multi-instance.png">
+  <meta property="og:title" content="Designing the Point-Cloud Annotation Loop">
+  <meta property="og:description" content="One scene, one instance, sixty-six frames—and no context lost between them.">
+  <meta property="og:image" content="https://hova88.github.io/blog/point-cloud-annotation-tool/images/scene-mode-overview.png">
   <meta property="og:url" content="https://hova88.github.io/blog/point-cloud-annotation-tool/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Designing for Flow: A Point-Cloud Annotation Tool">
-  <meta name="twitter:description" content="How a dense 3D workflow became a calm, learnable studio for operators.">
-  <meta name="twitter:image" content="https://hova88.github.io/blog/point-cloud-annotation-tool/images/single-frame-multi-instance.png">
+  <meta name="twitter:title" content="Designing the Point-Cloud Annotation Loop">
+  <meta name="twitter:description" content="One scene, one instance, sixty-six frames—and no context lost between them.">
+  <meta name="twitter:image" content="https://hova88.github.io/blog/point-cloud-annotation-tool/images/scene-mode-overview.png">
   <link rel="canonical" href="https://hova88.github.io/blog/point-cloud-annotation-tool/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,266 +52,210 @@
 
     <main id="main" class="post anno-post">
       <div class="post-heading">
-        <span class="anno-kicker">Product design case study</span>
-        <h1 class="post-title">Designing for Flow:<br>A Point-Cloud Annotation Tool</h1>
-        <p class="post-subtitle">How a dense 3D workflow became a calm, learnable studio for operators</p>
+        <span class="anno-kicker">Data tooling · interaction design</span>
+        <h1 class="post-title">Designing the Point-Cloud Annotation Loop</h1>
+        <p class="post-subtitle">One scene, one instance, sixty-six frames—and no context lost between them</p>
         <div class="publish-metadata">
           <span class="author"><a href="https://github.com/hova88">Yan haixu</a></span>
           <span>Aug 16, 2026</span>
         </div>
       </div>
 
-      <figure class="post-cover">
-        <img src="/blog/point-cloud-annotation-tool/images/single-frame-multi-instance.png" width="1734" height="946" alt="The point-cloud annotation studio in single-frame, multi-instance mode: an instance list on the left, three orthographic views, a large 3D point-cloud viewport, an attribute and issue inspector on the right, and a multi-track timeline below." fetchpriority="high">
-        <figcaption>Single-frame, multi-instance annotation. Every panel shares the same selection, frame, and review context.</figcaption>
+      <figure class="post-cover evidence-figure">
+        <a class="figure-link" href="/blog/point-cloud-annotation-tool/images/scene-mode-overview.png" target="_blank" rel="noopener" aria-label="Open the full-scene annotation workspace at full resolution">
+          <img src="/blog/point-cloud-annotation-tool/images/scene-mode-overview.png" width="1672" height="924" alt="Full-scene point-cloud annotation workspace with an instance list, three orthographic projections, a large 3D scene, an attribute and issue inspector, and a frame timeline." fetchpriority="high">
+          <span class="zoom-hint">Full resolution ↗</span>
+        </a>
+        <figcaption><span>Figure 1</span> Scene Mode. One selected object is resolved simultaneously in the list, projections, 3D scene, attributes, issue markers, and timeline.</figcaption>
       </figure>
 
       <div class="post-content-shell">
         <nav class="left-toc" aria-label="Table of contents">
           <ul>
-            <li><a href="#repetition">Designing for repetition</a></li>
-            <li><a href="#workspace">One workspace</a></li>
-            <li><a href="#modes">Two modes, one grammar</a></li>
-            <li><a href="#views">Linked views</a></li>
-            <li><a href="#instances">Instances and attributes</a></li>
-            <li><a href="#timeline">Time as structure</a></li>
-            <li><a href="#quality">Quality in context</a></li>
-            <li><a href="#language">A light studio language</a></li>
-            <li><a href="#learning">Designing the learning curve</a></li>
-            <li><a href="#principles">The system behind the screen</a></li>
+            <li><a href="#record">Start from the record</a></li>
+            <li><a href="#scene-mode">Scene Mode</a></li>
+            <li><a href="#timeline">The state timeline</a></li>
+            <li><a href="#focus-mode">Focus Mode</a></li>
+            <li><a href="#quality-state">Problem vs. normal</a></li>
+            <li><a href="#pipeline">The QA loop</a></li>
+            <li><a href="#interaction-rules">Interaction rules</a></li>
+            <li><a href="#visual-language">Visual language</a></li>
           </ul>
         </nav>
 
         <article class="content">
-          <p id="repetition">
-            Point-cloud annotation is not one difficult action. It is a long sequence of small, precise decisions: find an object, understand its geometry, choose a class, fit a box, move one frame forward, check continuity, and repeat. A tool can support every individual action and still feel exhausting if it asks the operator to repeatedly relocate attention, reopen context, or remember hidden state.
+          <p id="record">
+            A 3D box is not the final unit of work. It is one observation of an object track. What eventually matters is whether the same object keeps the right class, position, extent, orientation, visibility, and quality state across time. A fast drawing tool can still produce poor data if it makes those relationships hard to inspect.
           </p>
 
           <p>
-            That observation became the central design premise for this studio: <em>the next necessary action should already be near the operator's attention</em>. The interface is not optimized for the elegance of a single screenshot. It is optimized for the rhythm of an eight-hour session, when every extra click, long pointer journey, and ambiguous status becomes real cognitive cost.
+            The interface was therefore designed from the data record outward. Every region on screen exposes one part of the same object, rather than behaving like an independent feature.
           </p>
 
-          <div class="thesis-card">
-            <span class="eyebrow">The operating principle</span>
-            <p>Reduce mode switches. Preserve spatial memory. Keep the object, its geometry, its time, and its quality state in one continuous field of view.</p>
+          <div class="data-model" aria-label="The data model represented by the interface">
+            <span class="data-model__label">THE RECORD</span>
+            <code>instance@frame = class + pose + extent + evidence + review_state</code>
+            <code>track = instance[t₀ … tₙ]</code>
           </div>
 
           <p>
-            The result is deliberately dense, but not busy. Density is useful when information has a stable home. The design keeps a professional operator's entire loop visible while giving each region a single responsibility. Once that geography is learned, the interface begins to disappear.
+            The projections expose pose and extent. The instance list exposes identity and class. The timeline exposes the track. The issue markers and color states expose review. This is the first constraint of the design: changing the active instance or frame must update every representation together. The operator should never have to reconcile two selections or wonder which panel is stale.
           </p>
 
-          <h2 id="workspace"><span class="section-index">01 / WORKSPACE</span>One workspace, one mental model</h2>
+          <h2 id="scene-mode"><span class="section-index">01 / SCENE MODE</span>Build the scene before following the track</h2>
 
           <p>
-            The studio is organized as a persistent spatial model. Objects live on the left. Geometry occupies the center. Properties and review issues live on the right. Time runs along the bottom. Workflow state sits above everything. These regions do not trade places when the task changes, so the operator never has to rebuild a mental map.
+            Scene Mode answers a broad question: <em>what exists at this timestamp, and is the scene internally consistent?</em> The main viewport preserves spatial relationships between truck heads, trailers, cranes, plates, vehicles, cones, pedestrians, and unknown objects. Three orthographic projections sit beside it because a box that looks plausible in perspective can still be too wide, too tall, or offset from the returns.
           </p>
 
-          <div class="workspace-map" role="img" aria-label="Diagram of the five persistent workspace regions">
-            <div><b>1</b><strong>Instances</strong><span>Find, filter, and select every object in the scene.</span></div>
-            <div><b>2</b><strong>Detail views</strong><span>Fit edges precisely in three orthographic projections.</span></div>
-            <div class="map-viewport"><b>3</b><strong>3D scene</strong><span>Understand the object in its full spatial context.</span></div>
-            <div><b>4</b><strong>Inspector</strong><span>Edit labels, geometry, difficulty, and review issues.</span></div>
-            <div class="map-timeline"><b>5</b><strong>Timeline</strong><span>See presence, continuity, frame state, and the current playhead without leaving the scene.</span></div>
-          </div>
-
-          <p>
-            The layout follows the natural direction of the work. Selection begins on the left, verification happens in the center, correction happens on the right, and progression happens below. The large 3D viewport receives the most space because spatial judgment is the highest-value task. Supporting panels remain narrow and predictable.
-          </p>
-
-          <h3>Global state is visible, not buried</h3>
-
-          <p>
-            The top bar carries the few states that affect the whole task: annotation mode and the route from annotation complete to quality passed, quality failed, and data accepted. This makes state a part of the working surface rather than an administrative screen visited afterward. Operators can tell where they are in the pipeline without interrupting the job.
-          </p>
-
-          <h2 id="modes"><span class="section-index">02 / MODES</span>Two modes, one interaction grammar</h2>
-
-          <p>
-            Point-cloud work alternates between two different questions: “What objects exist in this frame?” and “How does this object behave across frames?” The studio makes that distinction explicit through two primary modes while keeping the surrounding interface unchanged.
-          </p>
-
-          <div class="mode-grid">
-            <section class="mode-card is-primary">
-              <span class="mode-number">MODE 01</span>
-              <h3>Single frame · multiple instances</h3>
-              <p>Optimized for scene coverage. The operator scans one timestamp, creates or adjusts every visible instance, and compares nearby objects in context.</p>
-            </section>
-            <section class="mode-card">
-              <span class="mode-number">MODE 02</span>
-              <h3>Single instance · multiple frames</h3>
-              <p>Optimized for continuity. Attention narrows to one object while the timeline reveals its motion, persistence, and frame-to-frame consistency.</p>
-            </section>
-          </div>
-
-          <p>
-            The important design decision is what <em>does not</em> change. The instance remains the same concept. Selection uses the same highlight. The inspector preserves the same field order. The timeline stays in the same place. Switching modes changes the scope of attention, not the language of the product. That continuity lowers the training cost and prevents mode errors.
-          </p>
-
-          <h2 id="views"><span class="section-index">03 / GEOMETRY</span>Linked views replace mental arithmetic</h2>
-
-          <p>
-            A 3D bounding box can look correct from one angle and be clearly wrong from another. The studio therefore treats the main perspective view and three orthographic views as one instrument. Selecting an instance in any region activates it everywhere: list row, colored box, projection, label, attributes, timeline track, and review markers.
-          </p>
-
-          <div class="micro-rule">
-            <span class="rule-mark">A</span>
-            <div><strong>Overview for meaning</strong><p>The central 3D scene answers “What is this object, and where is it relative to everything else?”</p></div>
-          </div>
-          <div class="micro-rule">
-            <span class="rule-mark">B</span>
-            <div><strong>Projections for precision</strong><p>The stacked side views answer “Do the box edges actually fit the observed points?”</p></div>
-          </div>
-          <div class="micro-rule">
-            <span class="rule-mark">C</span>
-            <div><strong>One selection everywhere</strong><p>No panel creates a second context. Every view is simply another lens on the active instance.</p></div>
-          </div>
-
-          <p>
-            This coupling removes a surprisingly expensive task: mentally translating between a list item, a colored cuboid, three projections, and a row of numeric values. The system performs that translation continuously. The operator can spend attention on judgment instead of bookkeeping.
-          </p>
-
-          <h2 id="instances"><span class="section-index">04 / OBJECTS</span>The instance list is a set of handles, not a database</h2>
-
-          <p>
-            The left panel is intentionally compact. Names such as <code>truck_head_big 1</code>, <code>ego_trailer 1</code>, <code>stacker 8</code>, or <code>unknown 1</code> combine class and instance identity in a form that can be scanned quickly. Small class icons and persistent colors make the list readable before the text is fully parsed. The selected row uses a broad blue highlight, giving the eye an immediate anchor in a visually complex scene.
-          </p>
-
-          <p>
-            The taxonomy covers the real operational world—from truck heads, trailers, hatch plates, stackers, cones, and cranes to general vehicles and pedestrians—but the list remains visually flat. Hierarchy is introduced only when it accelerates selection. The interface does not make the operator navigate an ontology before touching the object.
-          </p>
-
-          <h3>The inspector orders fields by decision frequency</h3>
-
-          <p>
-            On the right, the label appears first, followed by geometry and then descriptive metadata. Position, size, and rotation repeat the same x/y/z pattern, so the operator learns one numeric grammar. Annotation difficulty, point count, and instance ID sit below because they explain or verify the object rather than define its geometry.
-          </p>
-
-          <div class="field-matrix" aria-label="Attribute inspector field groups">
-            <div><strong>Label</strong><span>wide_40foot</span></div>
-            <div><strong>Position</strong><span>x · y · z</span></div>
-            <div><strong>Size</strong><span>x · y · z</span></div>
-            <div><strong>Rotation</strong><span>x · y · z</span></div>
-            <div><strong>Difficulty</strong><span>clear / ambiguous</span></div>
-            <div><strong>Evidence</strong><span>points · instance ID</span></div>
-          </div>
-
-          <p>
-            Compact controls matter here. Large form fields would look comfortable in isolation but would push related values out of view, creating scrolling and memory work. The restrained inspector keeps the entire definition of an object visible at once.
-          </p>
-
-          <h2 id="timeline"><span class="section-index">05 / TIME</span>The timeline turns frames into structure</h2>
-
-          <p>
-            A frame counter tells the operator where they are. A timeline explains what is happening around them. The lower region combines a frame ruler, a clear playhead, a global progress strip, and one track per relevant object. Contiguous blocks reveal when an instance exists, when it has been handled, and where attention is still required.
-          </p>
-
-          <div class="timeline-demo" role="img" aria-label="Simplified multi-track annotation timeline">
-            <div class="timeline-ruler"><span>FRAME</span><span>23</span><span>24</span><span>25</span><span>26</span><span>27</span><span>28</span><span>29</span><span>30</span><span>31</span><span>32</span><span>33</span><span>34</span></div>
-            <div class="timeline-track"><span class="track-name">ego_trailer</span><i class="review"></i><i class="review"></i><i class="review"></i><i class="review"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on playhead"></i><i class="on"></i><i class="on"></i><i class="quiet"></i><i class="quiet"></i></div>
-            <div class="timeline-track"><span class="track-name">drag_trailer</span><i class="review"></i><i class="review"></i><i class="quiet"></i><i class="quiet"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on playhead"></i><i class="on"></i><i class="quiet"></i><i class="quiet"></i><i class="quiet"></i></div>
-            <div class="timeline-track"><span class="track-name">other_trailer</span><i class="quiet"></i><i class="quiet"></i><i class="quiet"></i><i class="quiet"></i><i class="quiet"></i><i class="on"></i><i class="on"></i><i class="on playhead"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="quiet"></i></div>
-            <div class="timeline-note"><span>Presence and review become visible patterns.</span><span>playhead · frame 30</span></div>
-          </div>
-
-          <p>
-            The timeline also solves navigation without adding another mental model. Clicking a frame changes the shared scene context; selecting a track changes the shared instance context. Time and object are the two axes of the task, and the tool makes both directly addressable.
-          </p>
-
-          <h3>Frame-range feedback stays a range</h3>
-
-          <p>
-            When a problem extends across frames 23–30, the system preserves it as a temporal range instead of duplicating eight isolated comments. That reflects how reviewers actually think: a continuity error is one issue with duration, not a collection of unrelated mistakes.
-          </p>
-
-          <h2 id="quality"><span class="section-index">06 / QUALITY</span>Quality assurance stays inside the geometry</h2>
-
-          <p>
-            Many tools treat quality assurance as a separate destination. That separation is organizationally neat and operationally expensive: the reviewer loses the annotator's context, and the annotator later receives a vague list of errors detached from the scene. Here, annotation, review, repair, and acceptance share the same workspace.
-          </p>
-
-          <div class="status-flow" aria-label="Workflow states from annotation to data acceptance">
-            <div><strong>Annotation complete</strong><span>The scene is ready for review.</span></div>
-            <div><strong>Quality passed</strong><span>Geometry and labels are accepted.</span></div>
-            <div><strong>Quality failed</strong><span>Specific repair work is attached.</span></div>
-            <div><strong>Data accepted</strong><span>The task can enter the dataset.</span></div>
-          </div>
-
-          <p>
-            Review findings appear as numbered markers in the 3D scene and as entries in the issue panel. The marker supplies location; the panel supplies description, conversation, and resolution state. A repair confirmation—“confirmed fixed for the issue above”—closes the loop without forcing the operator to reconstruct what the reviewer saw.
-          </p>
-
-          <p>
-            Color carries review state only when it can be read without opening a panel. For an unselected box, light gray means annotated but not reviewed, light blue means reviewed and accepted, and light red means reviewed but failed. A failed object therefore asks for attention from the scene itself.
-          </p>
-
-          <div class="status-legend" aria-label="Unselected bounding box quality states">
-            <div class="unreviewed"><i></i><strong>Not reviewed</strong><span>Annotated, waiting for quality inspection.</span></div>
-            <div class="passed"><i></i><strong>Passed</strong><span>Inspected and accepted by quality review.</span></div>
-            <div class="failed"><i></i><strong>Failed</strong><span>Inspected, rejected, and linked to a repair issue.</span></div>
-          </div>
-
-          <h3>“Unknown” is a responsible answer</h3>
-
-          <p>
-            The <code>unknown</code> class is treated as a first-class state rather than a shameful exception. Point clouds are incomplete by nature: occlusion, sparse returns, and unfamiliar equipment can make certainty impossible. Giving uncertainty a visible, legitimate path prevents operators from forcing a confident but incorrect label merely to continue. Good annotation software does not hide ambiguity; it contains it.
-          </p>
-
-          <h2 id="language"><span class="section-index">07 / LANGUAGE</span>A light, modern studio—not a heavy enterprise console</h2>
-
-          <p>
-            The visual language borrows the nimble feeling of a modern design tool. It uses a dark working canvas, restrained chrome, crisp one-pixel separators, compact icon-led controls, and selection color that feels immediate rather than ceremonial. Panels sit beside one another instead of becoming stacks of cards. Space is reserved for data, not decoration.
-          </p>
-
-          <p>
-            The darkness is functional: point returns, wireframes, labels, and box edges need strong local contrast. Saturated class colors remain legible against black while the surrounding interface recedes. Blue is reserved for active or accepted states; red is reserved for failure; yellow and violet retain their power as object identities because they are not reused casually for unrelated messages.
-          </p>
-
-          <div class="palette-strip" aria-hidden="true">
-            <i style="background:#206aff"></i><i style="background:#6ca9f8"></i><i style="background:#3bc99e"></i><i style="background:#ebff00"></i><i style="background:#ff9900"></i><i style="background:#ff6b65"></i><i style="background:#b080ff"></i><i style="background:#ff00d6"></i>
-          </div>
-          <p class="palette-caption">Class identity is vivid; structural UI remains quiet.</p>
-
-          <p>
-            This is where “lightness” matters. It does not mean fewer capabilities or more empty space. It means fast response, shallow hierarchy, visible causality, and controls that feel close to the object they affect. The interface should feel like a studio instrument: precise, lively, and ready to be handled.
-          </p>
-
-          <h2 id="learning"><span class="section-index">08 / LEARNING</span>Designing the learning curve</h2>
-
-          <p>
-            A new operator should not have to understand the entire production pipeline before drawing a useful box. The stable workspace lets learning happen in layers. First, select an instance and recognize its highlight. Next, adjust the box in the projections. Then use the inspector. Finally, understand temporal continuity and review states. Each new concept attaches to a place the operator already knows.
-          </p>
-
-          <p>
-            Repetition then becomes muscle memory. The same actions produce the same visible consequences. The active object is always blue in the list. The inspector is always on the right. The playhead is always below the scene. A review problem is always both spatial and textual. This predictability is more valuable than a clever shortcut that must be remembered.
-          </p>
-
-          <h3>Why the discarded drafts mattered</h3>
-
-          <p>
-            The design exploration deliberately kept rejected timeline and dashboard variants beside the final direction. Earlier approaches separated progress, objects, and status into more independent surfaces. They could display more at once, but they fragmented the operator's loop. The final layout wins by making fewer conceptual borders: one selected instance, one current frame, one shared status, many synchronized views.
-          </p>
-
-          <h2 id="principles"><span class="section-index">09 / SYSTEM</span>The system behind the screen</h2>
-
-          <p>
-            The interface can be summarized as a set of reusable product principles. They apply beyond point clouds—to any expert tool where people make many small decisions against complex visual evidence.
-          </p>
-
-          <ol class="design-principles">
-            <li><b>01</b><span>Optimize the repeated path before polishing the exceptional path.</span></li>
-            <li><b>02</b><span>Give every kind of information a stable spatial home.</span></li>
-            <li><b>03</b><span>Let one selection synchronize every representation of an object.</span></li>
-            <li><b>04</b><span>Expose time as structure, not merely as a frame number.</span></li>
-            <li><b>05</b><span>Keep review feedback attached to the exact geometry and duration it describes.</span></li>
-            <li><b>06</b><span>Use color for identity and state only when it survives peripheral vision.</span></li>
-            <li><b>07</b><span>Treat uncertainty as information the system should preserve.</span></li>
+          <ol class="observation-list">
+            <li><b>01</b><div><strong>Instance index</strong><span>The list is the stable address of every object. Class icons and colors accelerate scanning; the selected row is a single global selection.</span></div></li>
+            <li><b>02</b><div><strong>Orthographic evidence</strong><span>Top, side, and front projections turn an ambiguous 3D fit into three simpler boundary checks.</span></div></li>
+            <li><b>03</b><div><strong>World context</strong><span>The large scene reveals collisions, duplicated boxes, implausible scale, and objects assigned to the wrong physical structure.</span></div></li>
+            <li><b>04</b><div><strong>Numerical definition</strong><span>Class, position, size, rotation, difficulty, point count, and instance ID remain visible without opening a separate form.</span></div></li>
+            <li><b>05</b><div><strong>Temporal footprint</strong><span>The bottom strip shows whether the selected object is normal or problematic before the operator leaves the frame.</span></div></li>
           </ol>
 
           <p>
-            The deepest design move is not a panel, a color, or a timeline. It is the decision to model the operator's work as one continuous flow. Annotation creates evidence. Quality review interprets it. Repair returns to the same evidence. Data acceptance closes the same thread. The interface keeps that continuity visible.
+            Red question markers are placed directly in the 3D scene. The corresponding issue list on the right carries the description and affected frame range—for example, frames 23–30. Location and explanation are deliberately separated but linked: the scene answers <em>where</em>; the issue panel answers <em>what changed and who resolved it</em>.
           </p>
 
-          <p class="final-line">The best annotation tool is not the one with the most visible power. It is the one that lets skilled judgment move with the least resistance.</p>
+          <p>
+            The <code>unknown</code> class is also a deliberate output, not an escape hatch. Sparse returns and occlusion often make a confident class impossible. Preserving uncertainty is better than forcing a clean but incorrect label into the dataset.
+          </p>
+
+          <h2 id="timeline"><span class="section-index">02 / CORE INNOVATION</span>The timeline is a state matrix, not a media scrubber</h2>
+
+          <p>
+            A conventional player answers only “which frame am I viewing?” That is insufficient for annotation. The useful question is “which objects exist, over which intervals, and where are the exceptions?” The timeline encodes that query directly: columns are frames, rows are object classes or tracks, and each cell carries state.
+          </p>
+
+          <figure class="wide-figure evidence-figure">
+            <a class="figure-link" href="/blog/point-cloud-annotation-tool/images/timeline-state-matrix.png" target="_blank" rel="noopener" aria-label="Open the annotation state timeline at full resolution">
+              <img src="/blog/point-cloud-annotation-tool/images/timeline-state-matrix.png" width="2006" height="628" alt="A 66-frame timeline with object categories as rows. Red intervals indicate frames with problems and blue intervals indicate normal frames." loading="lazy">
+              <span class="zoom-hint">Full resolution ↗</span>
+            </a>
+            <figcaption><span>Figure 2</span> The state matrix compresses object × time × quality into one scan. <i class="legend-dot legend-dot--red"></i> Red: problem frames. <i class="legend-dot legend-dot--blue"></i> Blue: normal frames.</figcaption>
+          </figure>
+
+          <p>
+            The red and blue segments are the essential contract. Red means that the frame contains a known problem. Blue means that the frame is normal. Because the encoding forms contiguous runs, a temporal failure becomes visible as a shape: a short red interval suggests a local exception; a long interval suggests a track-level problem; a one-frame red cell inside a blue run suggests a discontinuity worth inspecting immediately.
+          </p>
+
+          <p>
+            This changes navigation from playback to lookup. The operator first scans the matrix, then jumps to the relevant cell. That cell resolves a tuple—object, frame, quality state—and should drive the rest of the workspace:
+          </p>
+
+          <div class="query-line"><code>(instance_id, frame_id) → scene + projections + attributes + issue</code></div>
+
+          <p>
+            The vertical playhead gives an exact frame. The aggregate strip above the grid gives a sequence-level summary. The object rows show where that summary comes from. The same status is therefore readable at three scales without opening a report: dataset sequence, object track, and individual frame.
+          </p>
+
+          <h2 id="focus-mode"><span class="section-index">03 / FOCUS MODE</span>Hold one instance still; let time move around it</h2>
+
+          <p>
+            Scene Mode is the right place to establish context, but it is inefficient for checking temporal consistency. Focus Mode inverts the workspace: one instance remains fixed while its frames are laid out as comparable cards. Each card repeats the same three projections, frame number, difficulty, and yaw value.
+          </p>
+
+          <figure class="wide-figure evidence-figure">
+            <a class="figure-link" href="/blog/point-cloud-annotation-tool/images/focus-mode.png" target="_blank" rel="noopener" aria-label="Open Focus Mode at full resolution">
+              <img src="/blog/point-cloud-annotation-tool/images/focus-mode.png" width="1764" height="1096" alt="Focus Mode showing the same trailer instance across many frames in a card grid, with three projections per frame, difficulty controls, yaw values, a review discussion, and a timeline." loading="lazy">
+              <span class="zoom-hint">Full resolution ↗</span>
+            </a>
+            <figcaption><span>Figure 3</span> Focus Mode turns a track into a contact sheet. Adjacent frames can be compared without replaying the sequence.</figcaption>
+          </figure>
+
+          <p>
+            The card grid makes several failure modes visually cheap to detect. A box that changes width for one frame becomes a broken rhythm. A yaw jump becomes a numerical outlier beside otherwise stable values. A missed frame becomes a hole in the sequence. Difficulty can be assigned where the evidence is visible instead of in a detached metadata form.
+          </p>
+
+          <p>
+            The selected frame receives a blue border and footer, while the global timeline remains at the bottom. This preserves orientation when moving between modes. Scene Mode and Focus Mode are not two tools; they are two projections of the same state. The mode switch changes the comparison axis, not the underlying selection.
+          </p>
+
+          <p>
+            Review discussion is attached to the affected card. The reviewer can describe the issue, the annotator can repair it, and the interface records confirmation in place. The evidence, conversation, and resolution do not drift into separate systems.
+          </p>
+
+          <h2 id="quality-state"><span class="section-index">04 / FRAME STATE</span>Problem and normal must be distinguishable before opening the frame</h2>
+
+          <p>
+            The following two screens show the same workspace at different timeline positions. The geometry tools do not change. The state encoding does. This is important: quality is not another mode that replaces the annotation interface; it is data carried by the same frame and object records.
+          </p>
+
+          <div class="compare-figure" role="group" aria-label="Comparison of a problem frame and a normal frame">
+            <figure class="evidence-figure">
+              <a class="figure-link" href="/blog/point-cloud-annotation-tool/images/problem-frame-state.png" target="_blank" rel="noopener" aria-label="Open the problem-frame state at full resolution">
+                <img src="/blog/point-cloud-annotation-tool/images/problem-frame-state.png" width="1678" height="920" alt="The annotation workspace at frame 3, where the selected ego trailer interval is red to indicate a problem frame." loading="lazy">
+                <span class="state-badge state-badge--problem">Problem · frame 3</span>
+                <span class="zoom-hint">Full resolution ↗</span>
+              </a>
+              <figcaption><span>Figure 4A</span> The current frame falls inside a red problem interval.</figcaption>
+            </figure>
+            <figure class="evidence-figure">
+              <a class="figure-link" href="/blog/point-cloud-annotation-tool/images/normal-frame-state.png" target="_blank" rel="noopener" aria-label="Open the normal-frame state at full resolution">
+                <img src="/blog/point-cloud-annotation-tool/images/normal-frame-state.png" width="1672" height="924" alt="The annotation workspace at frame 27, where the selected ego trailer interval is blue to indicate a normal frame." loading="lazy">
+                <span class="state-badge state-badge--normal">Normal · frame 27</span>
+                <span class="zoom-hint">Full resolution ↗</span>
+              </a>
+              <figcaption><span>Figure 4B</span> The current frame falls inside a blue normal interval.</figcaption>
+            </figure>
+          </div>
+
+          <p>
+            In the problem state, the active playhead intersects a red segment. In the normal state, it intersects a blue segment. That relationship is repeated in the sequence summary and object row, so status survives both a quick peripheral glance and a detailed inspection. Color is not decoration here; it is an index into the repair workload.
+          </p>
+
+          <p>
+            The design avoids recoloring the point cloud itself to express QA. Point colors and box colors already encode geometry and class identity. Overloading them with review status would destroy information. Quality therefore lives in the timeline, markers, and issue panel—surfaces where red and blue have an unambiguous meaning.
+          </p>
+
+          <h2 id="pipeline"><span class="section-index">05 / QA LOOP</span>Separate local defects from task-level acceptance</h2>
+
+          <p>
+            A frame can contain a problem while the annotation task is still in progress. An instance can be repaired while the full sequence is not yet accepted. The interface keeps these levels distinct. Frame cells carry local state; issue records carry repair state; the top bar carries task state.
+          </p>
+
+          <div class="pipeline-strip" aria-label="Annotation and quality workflow">
+            <span>Annotation complete</span><b>→</b><span>QA review</span><b>→</b><span class="pipeline-fail">Failed + issue</span><b>→</b><span>Repaired</span><b>→</b><span class="pipeline-pass">Data qualified</span>
+          </div>
+
+          <p>
+            This prevents one overloaded “done” flag from hiding important transitions. A failed review creates a concrete issue and frame range. Repair changes the local record. Re-review changes the task state. Final acceptance becomes traceable because each transition has evidence behind it.
+          </p>
+
+          <h2 id="interaction-rules"><span class="section-index">06 / INTERACTION</span>Rules that make the tool teach itself</h2>
+
+          <ul class="rule-list">
+            <li><strong>Selection is global.</strong><span>There is one active instance and one active frame. Every panel consumes that state.</span></li>
+            <li><strong>Time is directly addressable.</strong><span>The operator jumps to a frame-state cell instead of searching through playback.</span></li>
+            <li><strong>Errors can be intervals.</strong><span>A problem across frames 23–30 is one temporal issue, not eight disconnected comments.</span></li>
+            <li><strong>Evidence stays beside the decision.</strong><span>Difficulty, yaw, attributes, and repair discussion appear where the point evidence is being judged.</span></li>
+            <li><strong>Uncertainty remains valid data.</strong><span><code>unknown</code> prevents low-confidence guesses from becoming false certainty.</span></li>
+          </ul>
+
+          <p>
+            These rules reduce training time because they remove exceptions from the interaction model. Selecting from the list, the viewport, a card, or a timeline cell always converges on the same object-frame pair. Once that relationship is understood, the rest of the interface becomes predictable.
+          </p>
+
+          <h2 id="visual-language"><span class="section-index">07 / VISUAL SYSTEM</span>The studio stays quiet so the data can be loud</h2>
+
+          <p>
+            The interface uses the compact, direct feel of a modern design tool: low chrome, one-pixel boundaries, shallow hierarchy, icon-led controls, and immediate selection feedback. The dark canvas is not a theme choice. It is a contrast budget for sparse points, wireframes, labels, and overlapping 3D boxes.
+          </p>
+
+          <p>
+            Saturated colors belong to object identity. Blue and red belong to quality state. Gray belongs to structure. Keeping those channels separate is what allows a dense screen to remain readable. The UI can show more because each color has a narrow job.
+          </p>
+
+          <blockquote>
+            A good annotation tool behaves like a debugger for data: inconsistency is cheap to find, its cause stays visible, the correction is local, and the final state is auditable.
+          </blockquote>
+
+          <p class="final-line">
+            The design is complete when operators stop thinking about panels and begin moving directly between evidence, exception, and repair.
+          </p>
         </article>
       </div>
 
