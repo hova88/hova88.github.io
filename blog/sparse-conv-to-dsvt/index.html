@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="从点云稀疏性、普通卷积的特征膨胀，到稀疏卷积、单步幅 Sparse Transformer 与 DSVT 的动态窗口、旋转集合和 3D 池化。">
+  <meta name="theme-color" content="#101111">
+  <meta property="og:title" content="只计算存在之处：从 Sparse Convolution 到 DSVT">
+  <meta property="og:description" content="一条从稀疏点云到 Dynamic Sparse Voxel Transformer 的完整视觉路线。">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/">
+  <meta property="og:image" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/assets/source-title.webp">
+  <title>只计算存在之处：从 Sparse Convolution 到 DSVT — hova</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;700;900&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700;8..60,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/blog/sparse-conv-to-dsvt/dsvt.css">
+</head>
+<body class="dsvt-page">
+  <div id="reading-progress" aria-hidden="true"></div>
+  <div id="wrapper">
+    <header id="header">
+      <div id="site-header" class="site-header">
+        <div class="navbar-logo"><a href="/" class="logo-handwritten">hova</a></div>
+        <div class="nav-group">
+          <nav class="top-nav" aria-label="Primary"><a href="/book/">Book</a><a href="/vis/">Vis</a><a href="/" aria-current="page">Blog</a></nav>
+          <button id="menu-toggle" class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
+        </div>
+      </div>
+      <div id="mobile-menu" class="mobile-menu-overlay" hidden aria-hidden="true"><nav class="mobile-menu-nav" aria-label="Mobile"><a href="/book/">Book</a><a href="/vis/">Vis</a><a href="/">Blog</a></nav></div>
+    </header>
+
+    <main id="main" class="dsvt-story">
+      <nav class="story-rail" aria-label="文章目录">
+        <a href="#sparsity"><span>01</span>稀疏从何而来</a><a href="#convolution"><span>02</span>卷积为何失效</a>
+        <a href="#sparse-conv"><span>03</span>稀疏卷积</a><a href="#transformer"><span>04</span>转向注意力</a>
+        <a href="#dsvt"><span>05</span>DSVT 全链路</a><a href="#sets"><span>06</span>动态集合</a>
+        <a href="#rotation"><span>07</span>旋转与位移</a><a href="#pooling"><span>08</span>池化与部署</a><a href="#verdict"><span>09</span>有效但不优雅</a>
+      </nav>
+
+      <article>
+        <header class="hero" id="top">
+          <div class="hero-kicker">Sparse point clouds · visual notes · 2026 rebuild</div>
+          <h1>只计算<br><span class="acid">存在</span>之处</h1>
+          <p class="hero-en">From <span>Sparse Convolution</span><br>to <em>Dynamic Sparse Voxel Transformer</em></p>
+          <div class="hero-meta"><p>从一个 96.7% 都是空白的 360 × 360 网格出发，拆开 DSVT 的每一步。</p><a href="#sparsity" class="start-link">开始下潜 <span>↓</span></a></div>
+          <div class="hero-grid" aria-hidden="true" id="hero-grid"></div>
+        </header>
+
+        <section class="chapter chapter-light" id="sparsity" data-chapter="01">
+          <div class="chapter-label"><span>01</span> SPARSITY</div>
+          <div class="chapter-head"><h2>点云为什么<br><em>天生稀疏？</em></h2><p>LiDAR 发射激光，收到的只是物体表面被命中的离散回波。空中没有连续纹理，遮挡之后也没有像素；把它投到 BEV 网格，大多数格子自然为空。</p></div>
+          <div class="visual-pair pointcloud-panel">
+            <figure class="paper-figure paper-figure-tall"><img src="assets/point-cloud.webp" alt="360乘360鸟瞰点云栅格，只有少量位置存在激光点" width="1123" height="1088"><figcaption>原 slide 中的 360 × 360 BEV 点云；黑色像素是非空 voxel。</figcaption></figure>
+            <div class="stat-stack">
+              <div class="big-stat"><span>96.7</span><sup>%</sup></div><p class="stat-label">EMPTY / 全部网格</p>
+              <div class="equation-card"><span class="eq-name">稀疏率</span><code>ρ = 1 − N<sub>active</sub> / (H × W)</code><code>= 1 − 4200 / (360 × 360)</code><strong>= 0.9676</strong></div>
+              <ul class="cause-list"><li><b>Surface</b><span>只照亮物体表面</span></li><li><b>Occlusion</b><span>遮挡后没有回波</span></li><li><b>Tiny scale</b><span>目标相对场景很小</span></li><li><b>Scattering</b><span>回波离散、分布不均</span></li></ul>
+            </div>
+          </div>
+          <aside class="takeaway"><span>关键直觉</span>图像把“每个位置”当数据；点云把“有回波的位置”当数据。算法若仍为整张网格付费，绝大多数算力都花在空白处。</aside>
+        </section>
+
+        <section class="chapter" id="convolution" data-chapter="02">
+          <div class="chapter-label"><span>02</span> DILATION</div>
+          <div class="chapter-head"><h2>一个 3×3 卷积，<br>怎样<span class="cyan">污染空白</span>？</h2><p>标准卷积输出的是“卷积核覆盖范围内的响应”。只要一个非零输入落进 3×3 邻域，它周围最多 9 个位置都可能变成非零。下一层再从这些新位置继续扩散。</p></div>
+          <div class="conv-lab" aria-labelledby="conv-lab-title">
+            <div class="lab-toolbar"><div><span class="eyebrow">INTERACTIVE</span><h3 id="conv-lab-title">连续卷积后的 active sites</h3></div><div class="step-buttons" role="group" aria-label="卷积层数"><button type="button" data-step="0" class="is-active">0</button><button type="button" data-step="1">1</button><button type="button" data-step="2">2</button><button type="button" data-step="3">3</button><button type="button" data-step="4">4</button></div></div>
+            <div class="conv-stage"><svg id="conv-grid" viewBox="0 0 660 420" role="img" aria-label="稀疏输入经过多层普通卷积后不断膨胀的示意图"></svg><div class="conv-readout"><span>active cells</span><strong id="active-count">28</strong><small id="active-growth">原始结构</small></div></div>
+          </div>
+          <div class="three-beats"><div><span>01</span><h3>Feature diluted</h3><p>非零响应被摊到原本为空的邻域。</p></div><div><span>02</span><h3>Structure blurred</h3><p>细线、边界和空洞逐层变粗。</p></div><div><span>03</span><h3>Compute inflated</h3><p>后续层不得不处理越来越多位置。</p></div></div>
+          <figure class="wide-figure"><div class="image-duo"><img src="assets/conv-steps-a.webp" alt="原始点云和经过一次卷积后的对比" width="1390" height="688" loading="lazy"><img src="assets/conv-steps-b.webp" alt="点云经过两次与三次卷积后的进一步膨胀" width="1398" height="696" loading="lazy"></div><figcaption>原 slide 的实验：从 0 → 1 → 2 → 3 层，稀疏轮廓持续变粗；第四层只会继续这一趋势。</figcaption></figure>
+        </section>
+
+        <section class="chapter chapter-acid" id="sparse-conv" data-chapter="03">
+          <div class="chapter-label"><span>03</span> SPARSE CONVOLUTION</div>
+          <div class="chapter-head"><h2>第一代答案：<br><em>只在 active sites 上卷积</em></h2><p>稀疏卷积不再保存完整致密张量，而是保存坐标 <code>C</code> 与特征 <code>F</code>；坐标映射决定哪些输入、权重和输出真正相遇。</p></div>
+          <div class="sparse-mechanism">
+            <figure class="paper-figure"><img src="assets/sparse-conv-map.webp" alt="普通卷积与稀疏卷积的计算映射对比" width="997" height="537" loading="lazy"><figcaption>普通卷积展开所有邻域；稀疏卷积只生成有效 input–kernel–output 映射。</figcaption></figure>
+            <div class="mechanism-copy"><div class="mini-definition"><span>Regular Sparse Conv</span><p>输出坐标可以扩张，适合下采样和建立新激活位置。</p></div><div class="mini-definition"><span>Submanifold Conv</span><p>输出坐标严格复用输入 active sites，阻止“submanifold dilation”。</p></div></div>
+          </div>
+          <div class="library-marquee"><span>sparseconvnet</span><span>spconv</span><span>torchsparse</span><span>minkowskiengine</span></div>
+          <div class="hard-to-deploy"><h3>But sparse convolution is hard to deploy.</h3><div class="deploy-flow"><div>坐标哈希</div><i>→</i><div>Rulebook</div><i>→</i><div>不规则访存</div><i>→</i><div>定制 CUDA</div></div><p>它节省了空位置的乘加，却把复杂度转移到坐标查找、动态映射和硬件相关的 kernel 优化。训练框架里能跑，不等于 TensorRT / 端侧部署时自然高效。</p></div>
+        </section>
+
+        <section class="chapter" id="transformer" data-chapter="04">
+          <div class="chapter-label"><span>04</span> TRANSFORMER</div>
+          <div class="chapter-head"><h2>第二代答案：<br>把 voxel 当作 <span class="acid">token</span></h2><p>注意力天然在 token 列表上运算，不要求每个空间位置都有值；并且一次交互就能建立远距离关系。困难从“如何卷积”变成了“如何把数量不等的稀疏 token 整理成 GPU 喜欢的规则批次”。</p></div>
+          <div class="evolution-line"><div><b>2017</b><span>Attention</span><small>序列内全局交互</small></div><div><b>2020</b><span>ViT</span><small>图像切成 patch token</small></div><div><b>2021</b><span>Swin</span><small>局部窗口 + shifted window</small></div><div class="active"><b>2022–23</b><span>SST → DSVT</span><small>稀疏窗口 + 动态集合</small></div></div>
+          <div class="visual-trio"><figure><img src="assets/vit-notes.webp" alt="Vision Transformer 把图像切成 patch token 的讲解图" width="1686" height="616" loading="lazy"><figcaption>ViT：从像素平面到 token 序列。</figcaption></figure><figure><img src="assets/swin-shift.webp" alt="Swin Transformer 的窗口位移示意" width="1342" height="540" loading="lazy"><figcaption>Swin：局部窗口控制复杂度，位移窗口建立跨窗连接。</figcaption></figure><figure><img src="assets/regional-grouping.webp" alt="Sparse Transformer 的区域分组流程" width="1022" height="414" loading="lazy"><figcaption>SST：按区域分组稀疏 token，再做局部注意力。</figcaption></figure></div>
+          <div class="single-stride"><div><span class="eyebrow">WHY SINGLE STRIDE?</span><h3>目标已经很小，<br>别再把它缩没。</h3></div><p>在约 150 m × 150 m 的 Waymo 场景里，汽车只有约 4 m 长；映射到 600 × 600 网格也不过十几像素。Transformer 已能扩大感受野，DSVT 因此在 X/Y 平面维持 single stride，把小目标的空间细节留住。</p></div>
+        </section>
+
+        <section class="chapter chapter-light" id="dsvt" data-chapter="05">
+          <div class="chapter-label"><span>05</span> DSVT / OVERVIEW</div>
+          <div class="chapter-head"><h2>DSVT 不是一个点子，<br>而是一条<span class="cyan">可部署流水线</span></h2><p>它用标准张量索引、排序、批量 MHSA 和注意力池化完成 3D backbone，不依赖自定义 CUDA 稀疏卷积算子。</p></div>
+          <figure class="architecture-figure"><img src="assets/dsvt-architecture.webp" alt="DSVT block 与完整 3D 感知架构" width="1950" height="690" loading="lazy"><figcaption>上：X-Axis 与 Y-Axis 两层组成一个 DSVT Block。下：Point cloud → Voxelization → DSVT → BEV Backbone → Head。</figcaption></figure>
+          <div class="pipeline"><div><b>01</b><strong>Input</strong><span>N × [x,y,z,…]</span></div><i>→</i><div><b>02</b><strong>Voxelization</strong><span>M × [b,z,y,x]</span></div><i>→</i><div class="focus"><b>03</b><strong>DSVT</strong><span>dynamic sets</span></div><i>→</i><div><b>04</b><strong>BEV</strong><span>dense feature map</span></div><i>→</i><div><b>05</b><strong>Head</strong><span>3D boxes / map</span></div></div>
+          <div class="voxel-example"><figure class="paper-figure"><img src="assets/voxel-zoom.webp" alt="点云、voxel 与四乘四局部网格的逐级放大" width="1125" height="613" loading="lazy"><figcaption>原 slide：raw cloud → BEV voxel → 一个 4 × 4 局部网格。</figcaption></figure><div class="parameter-board"><div><span>pc_range</span><code>[-54, -54, -5, 54, 54, 3]</code></div><div><span>voxel_size</span><code>[0.3, 0.3, 8]</code></div><div><span>grid</span><code>H = W = 108 / 0.3 = 360</code></div><div><span>max_voxels</span><code>360 × 360 = 129,600</code></div><div class="accent"><span>active_voxels</span><code>≈ 4,200</code></div></div></div>
+        </section>
+
+        <section class="chapter" id="sets" data-chapter="06">
+          <div class="chapter-label"><span>06</span> VOXELS → TOKENS</div>
+          <div class="chapter-head"><h2>最关键的一步：<br><span class="acid">不等长</span>窗口如何并行？</h2><p>每个窗口里的非空 voxel 数 <code>N</code> 不同。全 padding 浪费，逐窗循环又慢。DSVT 的解法是：每窗按稀疏度动态分配若干个固定长度 <code>τ</code> 的 set，然后把全场景所有 set 堆成一个 batch。</p></div>
+          <div class="window-setup"><figure class="paper-figure"><img src="assets/window-pair.webp" alt="未位移与半窗口位移的点云窗口划分" width="2003" height="666" loading="lazy"><figcaption>同一帧点云的两种窗口配置：shift = [0,0,0] 与 [15,15,0]。</figcaption></figure><div class="window-math"><span class="eyebrow">SLIDE EXAMPLE</span><code>window_shape = [30, 30, 1]</code><code>shift_list = [15, 15, 0]</code><code>size_win_x = 360 / 30 = 12</code><code>size_win_y = 360 / 30 = 12</code><code>max slots = 13 × 13 × 2 = 338</code></div></div>
+          <div class="set-algorithm"><div class="algorithm-copy"><span class="eyebrow">DYNAMIC SET PARTITION</span><h3>窗口越密，<br>分到的 set 越多。</h3><div class="formula"><span>① set 数量</span><code>S = ceil(N / τ)</code></div><div class="formula"><span>② 每个 set 的第 k 个索引</span><code>q<sup>j</sup><sub>k</sub> = floor(((jτ+k)/(Sτ)) · N)</code></div><div class="formula"><span>③ Gather</span><code>F<sub>j</sub>, O<sub>j</sub> = INDEX(V, Q<sub>j</sub>, D)</code></div><p>公式②把 <code>N</code> 个排序后的 voxel 均匀采成 <code>τ</code> 个位置。除不尽时会重复少量索引，重复项在 attention 中用 mask 屏蔽。</p></div><figure class="paper-figure paper-figure-tall"><img src="assets/set-formulas.webp" alt="DSVT 论文中动态集合划分公式的手写批注" width="1616" height="1275" loading="lazy"><figcaption>原 slide 对公式 (2)–(4) 的逐行批注。</figcaption></figure></div>
+          <div class="shape-story"><div><span>输入</span><strong>74</strong><small>non-empty windows</small></div><i>→</i><div><span>按密度展开</span><strong>98</strong><small>dynamic sets</small></div><i>→</i><div class="focus"><span>统一长度</span><strong>90</strong><small>voxels / set</small></div><i>→</i><div><span>索引张量</span><strong>(2, 98, 90)</strong><small>X/Y × set × token</small></div></div>
+          <p class="shape-note">这里第一个维度 <code>2</code> 不是 batch，而是同一批 voxel 的 X-axis 与 Y-axis 两种排序分组；这一点与官方实现的 <code>set_voxel_inds</code> 形状一致。</p>
+        </section>
+
+        <section class="chapter chapter-blue" id="rotation" data-chapter="07">
+          <div class="chapter-label"><span>07</span> ROTATED SETS</div>
+          <div class="chapter-head"><h2>第一次沿 X 排，<br>第二次沿 Y 排。</h2><p>固定 set 内做 attention 会形成信息孤岛。DSVT 不改变 set 长度，只改变 voxel 的排序主轴：相邻层重分组后，上一层被隔开的 voxel 会在下一层进入同一 set。</p></div>
+          <div class="rotation-switch" role="group" aria-label="旋转集合视图"><button type="button" data-axis="x" class="is-active">X-Axis partition</button><button type="button" data-axis="y">Y-Axis partition</button></div>
+          <div class="rotation-stage"><figure data-axis-panel="x" class="is-active"><img src="assets/sets-x.webp" alt="X轴主序划分出的彩色集合" width="1121" height="1090"><figcaption>先按 X-axis main order 排序，再均匀切成固定长度 set。</figcaption></figure><figure data-axis-panel="y"><img src="assets/sets-y.webp" alt="Y轴主序划分出的彩色集合" width="1107" height="1079"><figcaption>下一层换成 Y-axis main order，跨越上一层的 set 边界。</figcaption></figure><div class="rotation-equation"><code>V<sup>l</sup> = MHSA(INDEX(V<sup>l−1</sup>, Q, D<sub>x</sub>) + PE)</code><code>V<sup>l+1</sup> = MHSA(INDEX(V<sup>l</sup>, Q, D<sub>y</sub>) + PE)</code><p><b>Rotated set</b> 解决窗内的跨 set 传播；两层合成一个 DSVT Block。</p></div></div>
+          <div class="important-distinction"><div><span>INTRA-WINDOW</span><h3>Rotated set</h3><p>同一窗口内，X / Y 主序交替，打通 set 边界。</p></div><div><span>INTER-WINDOW</span><h3>Shift / hybrid window</h3><p>相邻 block 改窗口边界与尺寸，打通 window 边界并平衡速度。</p></div></div>
+          <div class="shift-gallery"><figure><img src="assets/shift-grid-zero.webp" alt="零位移窗口在点云上的划分" width="1143" height="1095" loading="lazy"><figcaption>shift = (0, 0, 0)</figcaption></figure><figure><img src="assets/shift-grid-half.webp" alt="半窗口位移后的点云划分" width="1191" height="1084" loading="lazy"><figcaption>shift = (15, 15, 0)</figcaption></figure></div>
+          <aside class="takeaway"><span>不要混淆</span>旋转的是 set 内排序轴；位移的是 window 边界。前者完成窗内通信，后者完成跨窗通信。</aside>
+        </section>
+
+        <section class="chapter" id="pooling" data-chapter="08">
+          <div class="chapter-label"><span>08</span> POOLING & DEPLOYMENT</div>
+          <div class="chapter-head"><h2>最后两块拼图：<br><span class="acid">3D 池化</span>与部署</h2><p>DSVT-P 用 pillar，Z 维已经压成 1；DSVT-V 保留 3D voxel，需要逐阶段压缩 Z。简单 MLP 或 max pooling 不够，论文用 attention-style 3D pooling 聚合局部几何。</p></div>
+          <div class="pooling-diagram"><div class="pool-cube"><span></span><span class="active"></span><span></span><span class="active"></span><span class="active"></span><span></span><span></span><span class="active"></span></div><i>→</i><div class="pool-query"><small>MAXPOOL</small><strong>Q</strong></div><div class="pool-kv"><small>ORIGINAL VOXELS</small><strong>K · V</strong></div><i>→</i><div class="pool-output"><small>ATTENTION</small><strong>1</strong><span>pooled token</span></div></div>
+          <div class="pool-formula"><code>P = MaxPool(p̃<sub>1…lwh</sub>)</code><code>P̃ = Attn(Q=P, KV=p̃<sub>1…lwh</sub>)</code></div>
+          <div class="deploy-summary"><div class="deploy-number"><strong>27</strong><span>Hz</span><small>TensorRT · A100<br>论文报告值</small></div><div class="deploy-copy"><h3>快，不只是少算；<br>还要让硬件容易算。</h3><ul><li>所有 set 统一为 <code>S × τ × C</code>，一次批量 MHSA。</li><li>核心由排序、索引、标准 attention 与 pooling 组成。</li><li>没有 sparse-conv 风格的自定义 CUDA 主干算子。</li><li>论文中 DSVT-P：67 ms；TensorRT 后 37 ms。</li></ul></div></div>
+          <div class="end-to-end"><h3>把整条逻辑压成 8 句话</h3><ol><li><span>01</span>LiDAR 只返回表面回波，BEV 网格约 96.7% 为空。</li><li><span>02</span>普通卷积让 active sites 向空白区膨胀，结构和计算量一起变糊。</li><li><span>03</span>稀疏卷积只处理有效映射，但坐标规则与定制 CUDA 增加部署成本。</li><li><span>04</span>Transformer 把非空 voxel 直接当 token，天然适合长程关系。</li><li><span>05</span>Single stride 保留 X/Y 分辨率，避免小目标在下采样中消失。</li><li><span>06</span>动态稀疏窗口把每窗 N 个 voxel 整成若干个固定 τ 长度的 set。</li><li><span>07</span>X/Y rotated sets 负责窗内通信，shift/hybrid windows 负责跨窗通信。</li><li><span>08</span>注意力式 3D 池化补齐 Z 维下采样，整条 backbone 可用标准算子部署。</li></ol></div>
+        </section>
+
+        <section class="verdict" id="verdict" data-chapter="09">
+          <div class="chapter-label"><span>09</span> THE VERDICT</div>
+          <div class="verdict-title"><span>Effective</span><i>≠</i><strong>Elegant</strong></div>
+          <div class="verdict-grid">
+            <div class="beauty-card"><span>ResNet</span><h3>F(x) + x</h3><p>一个 shortcut 同时改善优化、梯度传播与深层网络退化。原则简单，后果深远。</p></div>
+            <div class="beauty-card"><span>PointNet</span><h3>MLP + MAX</h3><p>共享逐点变换加对称聚合，一句话解决点集的排列不变性。</p></div>
+            <div class="trick-card"><span>DSVT</span><h3>一串精确的 tricks</h3><ul><li>固定窗口里 token 数不同 → 动态切 set</li><li>set 要等长 → 重复索引再 mask</li><li>set 彼此隔绝 → X/Y rotated ordering</li><li>window 彼此隔绝 → shift + hybrid shapes</li><li>3D 下采样不稳 → max query + attention pooling</li><li>部署要快 → 把一切整理成标准算子</li></ul></div>
+          </div>
+          <blockquote>DSVT 的美感不在“一个简单原则解释全部”，而在“把每一个工程裂缝都补到能并行、能部署、能保持精度”。这是一种系统工程的完整，却不是 ResNet / PointNet 那种令人拍案的概念简洁。</blockquote>
+          <p class="verdict-copy">因此它很强，也明显有 trick 感。超参数 <code>τ</code>、两种排序、两类窗口变化、重复 token mask 与额外 pooling 让读者必须记住多个机制；任何单独一项都不构成新的基本抽象。DSVT 更像对“稀疏、局部、并行、跨域、部署”五个约束的联合求解，而不是从一个第一性原理自然长出的架构。这不削弱它的实用价值，却解释了为什么它不如 ResNet 或 PointNet 好记、好迁移、好复述。</p>
+        </section>
+
+        <section class="source-section" id="source"><div><span class="eyebrow">SOURCE DECK</span><h2>原始 slides，<br>一页都没有丢。</h2><p>本文按原 PDF 的完整顺序重构：Abstract → Sparsity → dense convolution → sparse convolution → Transformer / ViT / Swin / sparse Transformer → single stride → DSVT structure → voxelization → window partition → get_set → set-to-token → shifted-window visualization，并补上论文中的 3D pooling、部署结果与批判性评价。</p><a class="download-deck" href="DSVT_sparse_conv.pdf" download>下载完整原始 PDF <span>14.7 MB ↗</span></a></div><figure><img src="assets/source-title.webp" alt="原始 DSVT slide 的论文标题区域" width="2346" height="760" loading="lazy"><figcaption>原 slide 的视觉语言被保留为黑底、超大衬线标题、荧光黄与青色强调。</figcaption></figure></section>
+
+        <section class="references"><h2>References</h2><ol><li><a href="https://openaccess.thecvf.com/content/CVPR2023/html/Wang_DSVT_Dynamic_Sparse_Voxel_Transformer_With_Rotated_Sets_CVPR_2023_paper.html">Wang et al., DSVT, CVPR 2023</a></li><li><a href="https://github.com/Haiyang-W/DSVT">Official DSVT implementation</a></li><li><a href="https://arxiv.org/abs/1706.01307">Submanifold Sparse Convolutional Networks</a></li><li><a href="https://openaccess.thecvf.com/content/CVPR2022/html/Fan_Embracing_Single_Stride_3D_Object_Detector_With_Sparse_Transformer_CVPR_2022_paper.html">Embracing Single Stride 3D Object Detector with Sparse Transformer</a></li><li><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16×16 Words</a></li><li><a href="https://arxiv.org/abs/2103.14030">Swin Transformer</a></li></ol><p class="source-note">文中数据、公式与架构以原始 slide、CVPR 论文和官方代码相互核对；图像均来自用户提供的原始 slide，用于逐图解读。</p></section>
+        <div class="article-end"><span>END / 09</span><a href="#top">回到顶部 ↑</a></div>
+      </article>
+    </main>
+    <footer id="footer"><div class="footer-inner"><span>hova88 © 2026</span><a href="https://github.com/hova88">GitHub</a></div></footer>
+  </div>
+  <script src="/js/main.js" defer></script><script src="/blog/sparse-conv-to-dsvt/dsvt.js" defer></script>
+</body>
+</html>
