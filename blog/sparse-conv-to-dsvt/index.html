@@ -3,198 +3,339 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A visual path from sparse point clouds and sparse convolution to DSVT, dynamic sets, rotated partitions, 3D pooling, and deployment.">
-  <meta name="theme-color" content="#eeece6">
-  <meta property="og:title" content="Computing Only Where Things Exist — From Sparse Convolution to DSVT">
-  <meta property="og:description" content="An image-led anatomy of sparse computation and the tricks behind DSVT.">
+  <meta name="description" content="A visual worklog on sparse convolution, sparse attention, and the systems that make irregular 3D data computable.">
+  <meta name="theme-color" content="#faf9f6">
+  <meta property="og:title" content="From Sparse to Structure">
+  <meta property="og:description" content="The technical history of sparse convolution and sparse attention, from coordinate maps to regular GPU batches.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/">
-  <meta property="og:image" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/assets/source-title.webp">
-  <title>Computing Only Where Things Exist — hova</title>
+  <meta property="og:image" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/assets/point-cloud.webp">
+  <title>From Sparse to Structure — hova</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=IBM+Plex+Mono&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/base.css">
-  <link rel="stylesheet" href="/blog/sparse-conv-to-dsvt/dsvt.css?v=3">
+  <link rel="stylesheet" href="/blog/sparse-conv-to-dsvt/dsvt.css?v=4">
 </head>
-<body class="dsvt-page">
+<body class="sparse-article">
   <div id="reading-progress" aria-hidden="true"></div>
   <div id="wrapper">
     <header id="header">
       <div id="site-header" class="site-header">
         <div class="navbar-logo"><a href="/" class="logo-handwritten">hova</a></div>
-        <div class="nav-group">
-          <nav class="top-nav" aria-label="Primary"><a href="/book/">Book</a><a href="/vis/">Vis</a><a href="/" aria-current="page">Blog</a></nav>
-          <button id="menu-toggle" class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
-        </div>
+        <div class="nav-group"><nav class="top-nav" aria-label="Primary"><a href="/book/">Book</a><a href="/vis/">Vis</a><a href="/" aria-current="page">Blog</a></nav><button id="menu-toggle" class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button></div>
       </div>
       <div id="mobile-menu" class="mobile-menu-overlay" hidden aria-hidden="true"><nav class="mobile-menu-nav" aria-label="Mobile"><a href="/book/">Book</a><a href="/vis/">Vis</a><a href="/">Blog</a></nav></div>
     </header>
 
-    <main id="main" class="dsvt-story">
-      <nav class="story-rail" aria-label="Essay sections">
-        <a href="#sparsity"><span>01</span>Sparsity</a><a href="#convolution"><span>02</span>Dilation</a>
-        <a href="#sparse-conv"><span>03</span>Sparse Conv</a><a href="#transformer"><span>04</span>Attention</a>
-        <a href="#dsvt"><span>05</span>DSVT</a><a href="#sets"><span>06</span>Dynamic Sets</a>
-        <a href="#rotation"><span>07</span>Rotation</a><a href="#pooling"><span>08</span>Pooling</a><a href="#verdict"><span>09</span>Verdict</a>
-      </nav>
-
-      <article class="essay">
-        <header class="essay-head" id="top">
-          <p class="overline">Sparse point clouds · visual notes · rebuilt from an early slide deck</p>
-          <h1>Computing Only<br>Where Things <em>Exist</em></h1>
-          <p class="dek">From sparse convolution to the Dynamic Sparse Voxel Transformer</p>
-          <div class="byline"><span>Yan Haixu</span><span>August 16, 2026</span></div>
-          <div class="hero-grid" aria-hidden="true" id="hero-grid"></div>
+    <main id="main">
+      <article class="article-shell">
+        <header class="article-header">
+          <p class="eyebrow">A visual worklog on irregular computation</p>
+          <h1>From Sparse<br>to Structure</h1>
+          <p class="subtitle">How sparse convolution and sparse attention turn empty 3D space into work a GPU can actually execute.</p>
+          <div class="article-meta"><span>Yan Haixu</span><span>August 2026</span><span>28 min read</span></div>
         </header>
 
-        <div class="opening-plates">
-          <figure class="cell cell--wide"><img src="assets/source-title.webp" alt="Title and authors of the DSVT paper" width="2346" height="760"><figcaption>The paper and official implementation that started these notes.</figcaption></figure>
-          <figure class="cell cell--portrait"><img src="assets/abstract.webp" alt="The abstract of the DSVT paper" width="866" height="1206"><figcaption>Its promise: an efficient, deployment-friendly backbone for sparse point clouds.</figcaption></figure>
+        <figure class="hero-sketch wide-figure">
+          <svg viewBox="0 0 980 430" role="img" aria-labelledby="hero-title hero-desc">
+            <title id="hero-title">A dense grid becomes a sparse coordinate list and a structured batch</title>
+            <desc id="hero-desc">Three hand-drawn panels show a mostly empty spatial grid, compact coordinate-feature rows, and regular blocks for GPU computation.</desc>
+            <defs><pattern id="hero-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" class="grid-line"/></pattern></defs>
+            <g transform="translate(24 68)"><rect width="250" height="250" fill="url(#hero-grid)" class="paper-box"/><g class="voxel-marks"><circle cx="42" cy="70" r="7"/><circle cx="70" cy="70" r="7"/><circle cx="98" cy="98" r="7"/><circle cx="126" cy="126" r="7"/><circle cx="154" cy="126" r="7"/><circle cx="182" cy="154" r="7"/><circle cx="210" cy="210" r="7"/><circle cx="70" cy="210" r="7"/></g><text x="8" y="-22" class="hand-label">space is mostly empty</text><text x="125" y="282" class="mono-label">129,600 cells</text></g>
+            <path d="M294 192c28-24 45-24 73 0" class="sketch-arrow"/><path d="M357 183l12 9-14 6" class="sketch-arrow"/>
+            <g transform="translate(390 72)"><text x="0" y="-26" class="hand-label">keep only what exists</text><rect width="188" height="244" class="paper-box"/><text x="18" y="30" class="mono-label">C = [b, x, y, z]</text><text x="18" y="58" class="mono-label">F = [f₀ … f꜀]</text><g class="row-lines"><path d="M18 83h152M18 110h152M18 137h152M18 164h152M18 191h152M18 218h152"/></g><g class="row-dots"><circle cx="30" cy="83" r="4"/><circle cx="52" cy="110" r="4"/><circle cx="74" cy="137" r="4"/><circle cx="96" cy="164" r="4"/><circle cx="118" cy="191" r="4"/><circle cx="140" cy="218" r="4"/></g><text x="94" y="276" class="mono-label">4,200 rows</text></g>
+            <path d="M600 192c28-24 45-24 73 0" class="sketch-arrow"/><path d="M663 183l12 9-14 6" class="sketch-arrow"/>
+            <g transform="translate(700 72)"><text x="0" y="-26" class="hand-label">manufacture regular work</text><g class="batch-tiles"><rect x="0" y="0" width="72" height="72"/><rect x="78" y="0" width="72" height="72"/><rect x="156" y="0" width="72" height="72"/><rect x="0" y="78" width="72" height="72"/><rect x="78" y="78" width="72" height="72"/><rect x="156" y="78" width="72" height="72"/><rect x="0" y="156" width="72" height="72"/><rect x="78" y="156" width="72" height="72"/><rect x="156" y="156" width="72" height="72"/></g><g class="tile-hatch"><path d="M8 18h56M8 36h56M8 54h56M86 18h56M86 36h56M86 54h56M164 18h56M164 36h56M164 54h56M8 96h56M8 114h56M8 132h56M86 96h56M86 114h56M86 132h56M164 96h56M164 114h56M164 132h56M8 174h56M8 192h56M8 210h56M86 174h56M86 192h56M86 210h56M164 174h56M164 192h56M164 210h56"/></g><text x="114" y="276" class="mono-label">fixed tiles / sets</text></g>
+          </svg>
+          <figcaption>Sparsity is not a layer type. It is a negotiation between geometry, indexing, and hardware.</figcaption>
+        </figure>
+
+        <div class="prose lead">
+          <p>A LiDAR scan is not a small image with missing pixels. It is a measurement of visible surfaces: thin, irregular, and dominated by empty space. The first generation of 3D networks treated that emptiness as an implementation detail. The next generation made it part of the tensor definition.</p>
+          <p>This article follows that change all the way down. We will start with the operator, build the kernel map by hand, examine the GPU dataflows used by mature libraries, and then ask why attention inherited many of the same problems. DSVT appears near the end—not as the destination, but as one revealing answer to the regularization problem.</p>
         </div>
 
-        <section class="chapter" id="sparsity" data-chapter="01">
-          <header class="chapter-head"><p class="chapter-no">01 / Sparsity</p><h2>Most of the scene<br>is nothing.</h2><p>LiDAR returns discrete echoes from visible surfaces. It does not paint continuous texture into the air, nor recover what lies behind an occluder. Once projected onto a bird’s-eye-view grid, emptiness is the dominant signal.</p></header>
-          <div class="image-note"><figure class="cell"><img src="assets/point-cloud.webp" alt="A sparse 360 by 360 bird's-eye-view point-cloud grid" width="1123" height="1088"><figcaption>A 360 × 360 BEV grid. Black marks are non-empty voxels.</figcaption></figure><aside class="number-note"><strong>96.7<sup>%</sup></strong><span>empty cells</span><code>1 − 4,200 / (360 × 360)</code></aside></div>
-          <div class="quiet-strip"><span>surface returns</span><i>·</i><span>occlusion</span><i>·</i><span>tiny relative scale</span><i>·</i><span>scattered echoes</span></div>
-          <p class="whisper">An image treats every location as data. A point cloud treats only measured locations as data.</p>
+        <aside class="reading-map" aria-label="Article outline"><span>Route</span><ol><li><a href="#empty">Empty space</a></li><li><a href="#algebra">Coordinate algebra</a></li><li><a href="#execution">Kernel maps</a></li><li><a href="#engines">Mature engines</a></li><li><a href="#attention">Sparse attention</a></li><li><a href="#regularity">Regular batches</a></li><li><a href="#afterword">DSVT, after</a></li></ol></aside>
+
+        <section id="empty" class="article-section">
+          <p class="section-number">01</p>
+          <h2>Dense convolution invents data where the sensor saw nothing</h2>
+          <div class="prose">
+            <p>Take the slide-deck example: roughly <code>4,200</code> occupied BEV cells inside a <code>360 × 360</code> grid. Only <code>3.24%</code> of the lattice contains a return. A dense tensor still allocates and processes all <code>129,600</code> cells.</p>
+          </div>
+
+          <figure class="source-figure wide-figure"><img src="assets/point-cloud.webp" alt="Sparse point cloud on a 360 by 360 bird's-eye-view grid" width="1123" height="1088"><figcaption>The original slide’s BEV view. Black pixels are occupied; almost everything else is structural zero.</figcaption></figure>
+
+          <div class="prose">
+            <p>The cost is not only wasted multiplication. A regular <code>3 × 3</code> convolution produces an output wherever its receptive field contains at least one non-zero input. One active cell can therefore activate nine outputs. The next layer sees those new outputs as valid input and expands again.</p>
+          </div>
+
+          <figure class="sketch-figure wide-figure">
+            <svg viewBox="0 0 920 300" role="img" aria-labelledby="dilation-title">
+              <title id="dilation-title">Active sites dilate under repeated dense convolution</title>
+              <defs><pattern id="small-grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" class="grid-line"/></pattern></defs>
+              <g transform="translate(30 42)"><text x="0" y="-16" class="hand-label">input</text><rect width="208" height="208" fill="url(#small-grid)" class="paper-box"/><g class="voxel-marks"><circle cx="65" cy="65" r="6"/><circle cx="91" cy="91" r="6"/><circle cx="117" cy="117" r="6"/><circle cx="143" cy="143" r="6"/></g></g>
+              <path d="M258 145h48m-12-8 12 8-12 8" class="sketch-arrow"/>
+              <g transform="translate(326 42)"><text x="0" y="-16" class="hand-label">after one layer</text><rect width="208" height="208" fill="url(#small-grid)" class="paper-box"/><g class="dilated-marks"><rect x="52" y="52" width="52" height="52"/><rect x="78" y="78" width="52" height="52"/><rect x="104" y="104" width="52" height="52"/><rect x="130" y="130" width="52" height="52"/></g></g>
+              <path d="M554 145h48m-12-8 12 8-12 8" class="sketch-arrow"/>
+              <g transform="translate(622 42)"><text x="0" y="-16" class="hand-label">after three layers</text><rect width="208" height="208" fill="url(#small-grid)" class="paper-box"/><path d="M39 39h78v26h26v26h26v26h26v78h-78v-26H91v-26H65v-26H39z" class="dilated-shape"/></g>
+            </svg>
+            <figcaption>Submanifold dilation: the feature support grows even when the geometric object does not.</figcaption>
+          </figure>
+
+          <div class="prose">
+            <p>Three things happen together: thin surfaces become thick feature volumes; disconnected returns begin to merge; and every later layer inherits a larger active set. Sparsity decays with depth precisely where the network is supposed to exploit it.</p>
+          </div>
+
+          <aside class="margin-note"><strong>The first distinction</strong><p>Zero-valued dense cells and absent sparse coordinates are not equivalent. A dense zero is still a location in the tensor. An absent coordinate is outside the tensor’s support.</p></aside>
         </section>
 
-        <section class="chapter" id="convolution" data-chapter="02">
-          <header class="chapter-head"><p class="chapter-no">02 / Dilation</p><h2>Dense convolution<br>cannot leave emptiness alone.</h2><p>A single non-zero input can activate every output touched by its 3 × 3 neighborhood. The next layer expands from those new sites. Geometry thickens; computation follows.</p></header>
-          <div class="strip strip--2"><figure class="cell"><img src="assets/dense-dilation.webp" alt="Submanifold dilation under repeated regular convolution" width="871" height="376"><figcaption>Regular convolution repeatedly dilates a sparse curve.</figcaption></figure><figure class="cell"><img src="assets/conv-steps-a.webp" alt="Original point cloud and the result after one convolution" width="1390" height="688"><figcaption>One layer: thin returns already begin to merge.</figcaption></figure></div>
-          <figure class="cell cell--wide breath"><img src="assets/conv-steps-b.webp" alt="Point cloud after two and three convolutions" width="1398" height="696"><figcaption>Two, then three layers: the sparse structure becomes a heavy silhouette.</figcaption></figure>
-          <div class="conv-lab" aria-labelledby="conv-lab-title"><div class="lab-head"><div><span>interactive trace</span><h3 id="conv-lab-title">Active sites after repeated 3 × 3 convolution</h3></div><div class="step-buttons" role="group" aria-label="Convolution depth"><button type="button" data-step="0" class="is-active">0</button><button type="button" data-step="1">1</button><button type="button" data-step="2">2</button><button type="button" data-step="3">3</button><button type="button" data-step="4">4</button></div></div><div class="conv-stage"><svg id="conv-grid" viewBox="0 0 660 420" role="img" aria-label="Sparse active sites expanding under repeated convolution"></svg><div class="conv-readout"><span>active cells</span><strong id="active-count">27</strong><small id="active-growth">original structure</small></div></div></div>
-          <div class="three-beats"><p><b>Feature diluted.</b> Responses spill into empty neighborhoods.</p><p><b>Structure blurred.</b> Lines, holes, and boundaries grow thick.</p><p><b>Compute inflated.</b> Every later layer inherits more active sites.</p></div>
+        <section id="algebra" class="article-section">
+          <p class="section-number">02</p>
+          <h2>Sparse convolution is coordinate algebra</h2>
+          <div class="prose">
+            <p>A sparse tensor separates <em>where</em> a feature exists from <em>what</em> the feature contains. In COO-like notation, the coordinate matrix <code>C</code> has one integer row per active site, while the feature matrix <code>F</code> stores the corresponding vectors.</p>
+          </div>
+
+          <div class="equation-block" aria-label="Sparse tensor coordinate and feature matrices">
+            <code>C = [ b<sub>i</sub>, x<sub>i</sub><sup>1</sup>, …, x<sub>i</sub><sup>D</sup> ] ∈ ℤ<sup>N×(D+1)</sup></code>
+            <code>F = [ f<sub>1</sub>, …, f<sub>N</sub> ]<sup>T</sup> ∈ ℝ<sup>N×C</sup></code>
+          </div>
+
+          <div class="prose">
+            <p>Now define an input support <code>C<sub>in</sub></code>, an output support <code>C<sub>out</sub></code>, and a set of kernel offsets <code>K</code>. The generalized sparse convolution is:</p>
+          </div>
+
+          <div class="equation-block equation-main"><code>y<sub>u</sub> = Σ<sub>δ∈K, u+δ∈C<sub>in</sub></sub> W<sub>δ</sub>x<sub>u+δ</sub>, &nbsp; u∈C<sub>out</sub></code></div>
+
+          <div class="prose">
+            <p>The multiplication is ordinary. The operator’s behavior comes from the policy used to construct <code>C<sub>out</sub></code>. This single point separates the main sparse-convolution variants.</p>
+          </div>
+
+          <div class="operator-notes wide-figure">
+            <article><svg viewBox="0 0 230 145" aria-hidden="true"><defs><pattern id="op-grid-a" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" class="grid-line"/></pattern></defs><rect x="18" y="12" width="192" height="120" fill="url(#op-grid-a)" class="paper-box"/><g class="voxel-marks"><circle cx="54" cy="48" r="5"/><circle cx="78" cy="72" r="5"/><circle cx="102" cy="72" r="5"/><circle cx="126" cy="96" r="5"/></g><g class="output-halo"><circle cx="54" cy="48" r="13"/><circle cx="78" cy="72" r="13"/><circle cx="102" cy="72" r="13"/><circle cx="126" cy="96" r="13"/></g></svg><h3>Submanifold</h3><code>C<sub>out</sub> = C<sub>in</sub></code><p>Stride-1 layers preserve the active support. They mix features along an existing surface without creating new sites.</p></article>
+            <article><svg viewBox="0 0 230 145" aria-hidden="true"><rect x="18" y="12" width="192" height="120" fill="url(#op-grid-a)" class="paper-box"/><g class="regular-area"><rect x="42" y="36" width="72" height="72"/><rect x="90" y="60" width="72" height="72"/></g><g class="voxel-marks"><circle cx="78" cy="72" r="5"/><circle cx="126" cy="96" r="5"/></g></svg><h3>Regular sparse</h3><code>C<sub>out</sub> = reachable sites</code><p>New coordinates may be created. This is useful at stage transitions, but repeated stride-1 use brings dilation back.</p></article>
+            <article><svg viewBox="0 0 230 145" aria-hidden="true"><rect x="18" y="12" width="192" height="120" fill="url(#op-grid-a)" class="paper-box"/><g class="stride-boxes"><rect x="30" y="24" width="48" height="48"/><rect x="78" y="48" width="48" height="48"/><rect x="126" y="72" width="48" height="48"/></g><g class="voxel-marks"><circle cx="54" cy="48" r="5"/><circle cx="102" cy="72" r="5"/><circle cx="150" cy="96" r="5"/></g></svg><h3>Strided sparse</h3><code>stride &gt; 1</code><p>Coordinates are mapped onto a coarser lattice. Resolution falls while the receptive field and usually the channel count grow.</p></article>
+          </div>
+
+          <div class="prose">
+            <p>A practical backbone therefore alternates two roles. Submanifold layers do most of the within-stage feature learning. Strided sparse layers change scale between stages. Inverse or transpose sparse convolutions reuse a previous coordinate relationship in reverse for U-Net decoders, reconstruction, or completion.</p>
+            <p>This pattern is the sparse analogue of a dense ResNet pyramid, but with a crucial extra state: every stage owns a coordinate set as well as a feature tensor.</p>
+          </div>
         </section>
 
-        <section class="chapter" id="sparse-conv" data-chapter="03">
-          <header class="chapter-head"><p class="chapter-no">03 / Sparse convolution, properly</p><h2>Do not skip zeroes.<br>Define a new tensor algebra.</h2><p>The phrase “compute only where data exists” is directionally right and technically incomplete. Mature sparse convolution is a contract among an active coordinate set, an output coordinate policy, a kernel map, and a hardware dataflow.</p></header>
-          <div class="strip strip--2 unequal"><figure class="cell"><img src="assets/sparse-conv-map.webp" alt="Dense and sparse convolution mapping compared" width="997" height="537"><figcaption>Dense convolution unfolds all neighborhoods. Sparse convolution materializes only valid input-output pairs.</figcaption></figure><figure class="cell"><img src="assets/parallel-sparse-conv.webp" alt="Parallel sparse convolution dataflow" width="1122" height="676"><figcaption>The saved multiplications return as coordinate queries, gathers, scatters, and irregular memory traffic.</figcaption></figure></div>
-
-          <div class="operator-sheet">
-            <div class="operator-equation"><p class="micro-label">Generalized sparse convolution</p><code>y<sub>u</sub> = Σ<sub>δ ∈ K, u+δ ∈ C<sub>in</sub></sub> W<sub>δ</sub>x<sub>u+δ</sub>, &nbsp; u ∈ C<sub>out</sub></code><p>The arithmetic is ordinary weighted accumulation. The decisive object is <code>C<sub>out</sub></code>: which coordinates are allowed to receive an output.</p></div>
-            <div class="operator-cases"><article><span>Submanifold</span><code>C<sub>out</sub> = C<sub>in</sub></code><p>Stride 1. Active geometry is preserved, so repeated layers do not thicken a surface.</p></article><article><span>Regular sparse</span><code>C<sub>out</sub> = reachable lattice sites</code><p>May create coordinates. Used at strided stage transitions to enlarge receptive field and reduce resolution.</p></article><article><span>Inverse / generative</span><code>C<sub>out</sub> = an earlier coordinate map</code><p>Reuses the forward map in reverse for decoding, completion, or U-Net upsampling.</p></article></div>
+        <section id="execution" class="article-section">
+          <p class="section-number">03</p>
+          <h2>The kernel map is the hidden operator</h2>
+          <div class="prose">
+            <p>Dense convolution knows that every offset is valid, so an implementation can derive memory addresses arithmetically. Sparse convolution must first discover which input-output pairs exist. For every kernel offset <code>δ</code>, it builds a relation:</p>
           </div>
 
-          <div class="sparse-op-lab" aria-labelledby="sparse-op-title">
-            <div class="lab-head lab-head--light"><div><span>interactive coordinate algebra</span><h3 id="sparse-op-title">Change the output-coordinate policy</h3></div><div class="mode-buttons" role="group" aria-label="Sparse convolution type"><button type="button" data-sparse-mode="subm" class="is-active">SubM</button><button type="button" data-sparse-mode="regular">Regular</button><button type="button" data-sparse-mode="stride">Stride 2</button></div></div>
-            <div class="sparse-op-stage"><svg id="sparse-op-svg" viewBox="0 0 760 420" role="img" aria-label="Input coordinates, output coordinates, and kernel map pairs for sparse convolution"></svg><aside class="op-readout"><div><span>input sites</span><strong id="op-input-count">9</strong></div><div><span>output sites</span><strong id="op-output-count">9</strong></div><div><span>valid pairs</span><strong id="op-pair-count">—</strong></div><p id="op-mode-note">The output set is identical to the input set. Empty neighbors may contribute nothing, but they never become outputs.</p></aside></div>
-            <div class="op-legend"><span><i class="input-dot"></i>input coordinate</span><span><i class="output-dot"></i>output coordinate</span><span><i class="pair-line"></i>one valid kernel-map pair</span></div>
+          <div class="equation-block equation-main"><code>R<sub>δ</sub> = { (i, j) | C<sub>in</sub>[i] = C<sub>out</sub>[j] + δ }</code></div>
+
+          <figure class="sketch-figure wide-figure">
+            <svg viewBox="0 0 960 440" role="img" aria-labelledby="map-title">
+              <title id="map-title">Construction and execution of a sparse convolution kernel map</title>
+              <defs><pattern id="map-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" class="grid-line"/></pattern></defs>
+              <g transform="translate(28 80)"><text x="0" y="-28" class="hand-label">1. coordinate maps</text><rect width="240" height="240" fill="url(#map-grid)" class="paper-box"/><g class="indexed-dots"><circle cx="45" cy="45" r="8"/><text x="45" y="49">0</text><circle cx="75" cy="75" r="8"/><text x="75" y="79">1</text><circle cx="105" cy="75" r="8"/><text x="105" y="79">2</text><circle cx="135" cy="105" r="8"/><text x="135" y="109">3</text><circle cx="165" cy="135" r="8"/><text x="165" y="139">4</text><circle cx="195" cy="165" r="8"/><text x="195" y="169">5</text></g><path d="M30 336c54 20 121 18 191 1" class="pencil-underline"/><text x="120" y="366" class="mono-label">coord → row id</text></g>
+              <path d="M286 195h52m-12-8 12 8-12 8" class="sketch-arrow"/>
+              <g transform="translate(360 62)"><text x="0" y="-10" class="hand-label">2. rulebook / kernel map</text><rect y="30" width="236" height="282" class="paper-box"/><text x="20" y="62" class="mono-label">δ = (-1, 0)</text><text x="20" y="88" class="mono-label">input [1, 3, 4]</text><text x="20" y="110" class="mono-label">output [0, 2, 3]</text><path d="M18 130h200" class="row-separator"/><text x="20" y="160" class="mono-label">δ = ( 0, 0)</text><text x="20" y="186" class="mono-label">input [0, 1, 2, 3, 4, 5]</text><text x="20" y="208" class="mono-label">output [0, 1, 2, 3, 4, 5]</text><path d="M18 228h200" class="row-separator"/><text x="20" y="258" class="mono-label">δ = ( 1, 0)</text><text x="20" y="284" class="mono-label">input [0, 2, 3]</text><text x="20" y="306" class="mono-label">output [1, 3, 4]</text><path d="M20 338c42 15 119 13 188 0" class="pencil-underline"/><text x="118" y="366" class="mono-label">pairs grouped by offset</text></g>
+              <path d="M618 195h52m-12-8 12 8-12 8" class="sketch-arrow"/>
+              <g transform="translate(694 80)"><text x="0" y="-28" class="hand-label">3. feature execution</text><rect width="238" height="76" class="paper-box"/><text x="18" y="32" class="mono-label">gather F[input]</text><text x="18" y="56" class="mono-label">for each δ</text><path d="M119 76v42m-8-12 8 12 8-12" class="sketch-arrow"/><rect y="118" width="238" height="76" class="paper-box accent-box"/><text x="18" y="150" class="mono-label">GEMM with Wδ</text><text x="18" y="174" class="mono-label">many uneven groups</text><path d="M119 194v42m-8-12 8 12 8-12" class="sketch-arrow"/><rect y="236" width="238" height="76" class="paper-box"/><text x="18" y="268" class="mono-label">scatter-add Y[output]</text><text x="18" y="292" class="mono-label">accumulate offsets</text><path d="M22 340c48 13 132 16 193-1" class="pencil-underline"/><text x="119" y="366" class="mono-label">move → multiply → move</text></g>
+            </svg>
+            <figcaption>The kernel map converts geometric sparsity into row-index pairs. After that, sparse convolution is indexed dense linear algebra.</figcaption>
+          </figure>
+
+          <div class="prose">
+            <p>The coordinate engine usually inserts coordinates into a hash table or sorted map, queries offset neighbors, removes duplicates, and emits input/output row indices. The feature engine groups those pairs by offset, gathers feature rows, multiplies by <code>W<sub>δ</sub></code>, and scatter-adds the partial results.</p>
+            <p>This creates two independent performance clocks:</p>
           </div>
 
-          <div class="rulebook-section">
-            <div class="section-intro"><p class="micro-label">The real execution path</p><h3>A sparse layer is two systems stitched together.</h3><p>First, a coordinate engine discovers legal edges in the sparse graph. Then, a feature engine evaluates those edges. FLOP savings only matter if map construction and feature movement do not dominate.</p></div>
-            <div class="rulebook-flow"><article><span>01</span><h4>COO tensor</h4><code>C: N × (D+1)<br>F: N × C<sub>in</sub></code><p>Integer batch/spatial coordinates live beside a compact feature matrix.</p></article><i>→</i><article><span>02</span><h4>Coordinate map</h4><code>coord → row id</code><p>A hash table or sorted index answers whether a neighbor exists and where its feature row lives.</p></article><i>→</i><article class="is-focus"><span>03</span><h4>Kernel map</h4><code>R<sub>δ</sub> = {(i,j)}</code><p>For every kernel offset, store the input row <code>i</code> and output row <code>j</code> that must interact.</p></article><i>→</i><article><span>04</span><h4>Feature kernel</h4><code>gather → GEMM → scatter</code><p>Gather <code>F[i]</code>, multiply by <code>W<sub>δ</sub></code>, then scatter-add into <code>Y[j]</code>.</p></article></div>
-            <p class="technical-note"><b>Expert detail.</b> A residual block often repeats the same coordinate set and kernel shape. Engines such as MinkowskiEngine cache the kernel map so the expensive neighbor search can be amortized. Strided layers, pruning, and dynamically changing sparsity invalidate that advantage.</p>
+          <ol class="reasoning-list">
+            <li><strong>Mapping time.</strong> Hashing, sorting, deduplication, allocation, and kernel-map construction scale with the active coordinates and the kernel volume.</li>
+            <li><strong>Feature time.</strong> Gather, matrix multiplication, and scatter scale with the number of valid pairs and the channel dimensions.</li>
+          </ol>
+
+          <div class="prose">
+            <p>Early layers with few channels are often mapping- or memory-bound. Deeper layers with larger channel matrices can become compute-bound. A single “sparse FLOP count” hides this transition.</p>
           </div>
 
-          <div class="dataflow-comparison">
-            <article><p class="micro-label">Dataflow A</p><h3>Gather · GEMM · Scatter</h3><svg class="mini-flow" viewBox="0 0 420 116" aria-hidden="true"><g class="memory-blocks"><rect x="8" y="30" width="62" height="56"/><rect x="85" y="30" width="62" height="56"/><rect x="162" y="30" width="62" height="56"/><path d="M70 58h15M147 58h15"/><rect class="accent" x="247" y="18" width="88" height="80"/><path d="M224 58h23M335 58h18"/><rect x="353" y="30" width="58" height="56"/></g><text x="39" y="106">δ₀</text><text x="116" y="106">δ₁</text><text x="193" y="106">δ₂</text><text x="291" y="106">GEMM</text><text x="382" y="106">Y</text></svg><p>Simple and flexible. Work is grouped by kernel offset, but occupancy varies, producing many small matrix multiplications and explicit feature movement.</p></article>
-            <article><p class="micro-label">Dataflow B</p><h3>Masked implicit GEMM</h3><svg class="mini-flow" viewBox="0 0 420 116" aria-hidden="true"><g class="tile-grid"><rect x="20" y="18" width="230" height="80"/><path d="M20 38h230M20 58h230M20 78h230M66 18v80M112 18v80M158 18v80M204 18v80"/><rect class="accent" x="20" y="18" width="46" height="20"/><rect class="accent" x="112" y="38" width="46" height="20"/><rect class="accent" x="204" y="78" width="46" height="20"/><path d="M250 58h34"/><rect x="284" y="18" width="116" height="80"/></g><text x="135" y="112">masked sparse tile</text><text x="342" y="112">Tensor Core</text></svg><p>Recasts sparse convolution as regular tiles with validity masks. It improves Tensor Core utilization, but pays for masks, index generation, and sometimes redundant arithmetic.</p></article>
-            <article><p class="micro-label">Dataflow C</p><h3>Generated + autotuned</h3><svg class="mini-flow" viewBox="0 0 420 116" aria-hidden="true"><g class="autotune-flow"><rect x="16" y="22" width="84" height="72"/><path d="M100 58h42"/><path d="M142 58l-10-8M142 58l-10 8"/><rect class="accent" x="152" y="8" width="102" height="40"/><rect x="152" y="68" width="102" height="40"/><path d="M254 28h48M254 88h48"/><rect x="302" y="22" width="102" height="72"/></g><text x="58" y="112">layer</text><text x="203" y="28">implicit</text><text x="203" y="88">g-g-s</text><text x="353" y="112">best plan</text></svg><p>Kernel generation and search choose a dataflow per layer, precision, shape, and GPU. This is the systems direction behind TorchSparse++ rather than a new convolutional operator.</p></article>
+          <h3 class="subheading">Why cache the map?</h3>
+          <div class="prose">
+            <p>Residual blocks commonly repeat the same active coordinates and kernel shape. A coordinate manager can cache <code>R<sub>δ</sub></code> and reuse it across layers, amortizing the neighbor search. The cache is less useful after striding, pruning, generative expansion, or any operation that changes the support.</p>
           </div>
 
-          <div class="history-block">
-            <div class="section-intro"><p class="micro-label">2014 → now</p><h3>The development arc</h3><p>The operator stabilized early. Most later progress moved below the model level: coordinate management, memory locality, Tensor Core mapping, precision, kernel generation, and ecosystem integration.</p></div>
-            <ol class="history-line"><li><time>2014–15</time><h4>Spatially sparse CNNs</h4><p>Graham formalizes sparse feature storage and active-site computation, first in 2D handwriting and then in 3D.</p><a href="https://arxiv.org/abs/1409.6070">paper ↗</a></li><li><time>2017</time><h4>Submanifold convolution</h4><p><code>C<sub>out</sub>=C<sub>in</sub></code> stops repeated stride-1 layers from dilating sparse surfaces.</p><a href="https://arxiv.org/abs/1706.01307">paper ↗</a></li><li><time>2018</time><h4>SECOND + spconv</h4><p>Sparse 3D backbones become a practical default for voxel-based LiDAR detection.</p><a href="https://www.mdpi.com/1424-8220/18/10/3337">paper ↗</a></li><li><time>2019–20</time><h4>MinkowskiEngine</h4><p>Generalized convolution, arbitrary dimensions, coordinate managers, rich sparse operators, and GPU coordinate mapping.</p><a href="https://arxiv.org/abs/1904.08755">paper ↗</a></li><li><time>2021–22</time><h4>spconv 2.x · TorchSparse</h4><p>Implicit GEMM, Tensor Cores, mixed precision, adaptive grouping, and locality-aware memory access target the actual GPU bottlenecks.</p><a href="https://github.com/traveller59/spconv">spconv ↗</a></li><li><time>2023+</time><h4>TorchSparse++</h4><p>A kernel generator and autotuner search across dataflows instead of forcing one execution strategy on every layer.</p><a href="https://arxiv.org/abs/2311.12862">paper ↗</a></li></ol>
+          <h3 class="subheading">Why the GPU still complains</h3>
+          <div class="prose">
+            <p>Each offset contains a different number of valid pairs. A gather-GEMM-scatter implementation therefore launches many matrices with uneven row counts and moves feature vectors explicitly. It is flexible, but the hardware sees small GEMMs and irregular memory access.</p>
+            <p>Masked implicit GEMM takes the opposite approach: encode valid connections as masks and map the convolution into larger, more regular tiles that suit Tensor Cores. It can trade redundant arithmetic and mask processing for better utilization. Modern systems increasingly choose between these dataflows per layer instead of insisting on one universal kernel.</p>
           </div>
 
-          <div class="solution-landscape">
-            <div class="section-intro"><p class="micro-label">Practical landscape · 2026</p><h3>What is mature, and for what?</h3><p>There is no universal winner. “Mature” can mean broad operators, detector compatibility, peak NVIDIA throughput, simple installation, or an exportable deployment graph. Those are different axes.</p></div>
-            <div class="solution-table" role="table" aria-label="Comparison of mature sparse convolution frameworks">
-              <div class="solution-row solution-head" role="row"><span role="columnheader">Engine</span><span role="columnheader">Best fit</span><span role="columnheader">Execution emphasis</span><span role="columnheader">Engineering boundary</span></div>
-              <div class="solution-row" role="row"><strong role="cell">spconv 2.x<small>production-shaped</small></strong><span role="cell">Outdoor 3D detection on NVIDIA GPUs; OpenPCDet and MMDetection3D ecosystems.</span><span role="cell">Native and masked implicit GEMM; Tensor Core FP16/TF32; 2.3 adds INT8; pure C++ <code>libspconv</code>.</span><span role="cell">Highly optimized, but the sparse ops remain specialized. Export still requires compatible plugins or a custom runtime path.</span></div>
-              <div class="solution-row" role="row"><strong role="cell">MinkowskiEngine<small>most general</small></strong><span role="cell">3D/4D segmentation, reconstruction, research, arbitrary-dimensional sparse tensor networks.</span><span role="cell">CoordinateManager, reusable kernel maps, custom kernel regions, broad sparse layer coverage.</span><span role="cell">Excellent abstraction breadth; builds and CUDA/PyTorch compatibility are heavier than ordinary dense modules.</span></div>
-              <div class="solution-row" role="row"><strong role="cell">TorchSparse++<small>systems-first</small></strong><span role="cell">Latency-sensitive training or inference when supported models and hardware match its tuned paths.</span><span role="cell">Sparse kernel generation plus per-layer autotuning across gather-GEMM-scatter and implicit dataflows.</span><span role="cell">Strong author-reported performance and detector plugins; a smaller downstream ecosystem than spconv.</span></div>
-              <div class="solution-row is-muted" role="row"><strong role="cell">SparseConvNet<small>historical</small></strong><span role="cell">Reading canonical implementations and reproducing older submanifold sparse CNN work.</span><span role="cell">Rulebook-based sparse operations and the original SSCN design vocabulary.</span><span role="cell">Foundational, but no longer the first choice for a new production stack.</span></div>
-            </div>
-            <p class="technical-note"><b>A defensible default.</b> For a modern LiDAR detector already inside OpenPCDet or MMDetection3D, start with spconv 2.x. For a research codebase that genuinely needs generic 3D/4D sparse tensor algebra, choose MinkowskiEngine. Benchmark TorchSparse++ when kernel-level latency is the project itself. If ONNX/TensorRT portability is a hard requirement, evaluate the deployment path before architecture selection—not after training.</p>
-          </div>
-
-          <aside class="dark-note"><h3>Efficient arithmetic.<br>Expensive irregularity.</h3><p>Sparse convolution wins by deleting zero-valued edges from the computation graph. But a GPU prefers uniform tiles, contiguous memory, and static shapes. The mature systems above are different answers to the same contradiction: preserve mathematical sparsity while manufacturing enough regularity for hardware.</p></aside>
+          <figure class="sketch-figure wide-figure">
+            <svg viewBox="0 0 900 300" role="img" aria-labelledby="dataflow-title">
+              <title id="dataflow-title">Three sparse convolution execution strategies</title>
+              <g transform="translate(24 45)"><text x="0" y="-18" class="hand-label">gather · GEMM · scatter</text><g class="ragged-bars"><rect x="0" y="30" width="48" height="120"/><rect x="58" y="62" width="48" height="88"/><rect x="116" y="96" width="48" height="54"/></g><path d="M178 90h45m-12-8 12 8-12 8" class="sketch-arrow"/><rect x="235" y="42" width="72" height="96" class="accent-box"/><text x="271" y="94" class="mono-label">MM</text><text x="154" y="190" class="mono-label">uneven groups</text></g>
+              <g transform="translate(350 45)"><text x="0" y="-18" class="hand-label">masked implicit GEMM</text><g class="mask-grid"><rect x="0" y="30" width="210" height="120"/><path d="M0 60h210M0 90h210M0 120h210M42 30v120M84 30v120M126 30v120M168 30v120"/><rect x="0" y="30" width="42" height="30" class="mask-on"/><rect x="84" y="60" width="42" height="30" class="mask-on"/><rect x="168" y="120" width="42" height="30" class="mask-on"/></g><text x="105" y="190" class="mono-label">regular tile + validity mask</text></g>
+              <g transform="translate(650 45)"><text x="0" y="-18" class="hand-label">generated + autotuned</text><rect x="0" y="42" width="80" height="96" class="paper-box"/><text x="40" y="94" class="mono-label">layer</text><path d="M92 90h40" class="sketch-arrow"/><path d="M132 90l30-42M132 90l30 42" class="sketch-arrow"/><rect x="172" y="25" width="80" height="46" class="accent-box"/><rect x="172" y="109" width="80" height="46" class="paper-box"/><text x="212" y="53" class="mono-label">implicit</text><text x="212" y="137" class="mono-label">G-G-S</text><text x="126" y="190" class="mono-label">pick per shape / precision / GPU</text></g>
+            </svg>
+            <figcaption>The mathematical operator stays fixed while the systems layer changes how irregular pairs become regular machine work.</figcaption>
+          </figure>
         </section>
 
-        <section class="chapter" id="transformer" data-chapter="04">
-          <header class="chapter-head"><p class="chapter-no">04 / Attention on sparse geometry</p><h2>Attention does not remove irregularity.<br>It moves it.</h2><p>Turning every occupied voxel into a token deletes empty cells from the sequence. It does not decide which tokens may communicate, how geometry enters the score, or how unequal neighborhoods become efficient GPU batches.</p></header>
-          <div class="strip strip--2"><figure class="cell"><img src="assets/vit-notes.webp" alt="Annotated notes on Vision Transformer patch tokens" width="1686" height="616"><figcaption>ViT regularizes a dense image into an equal-length patch sequence.</figcaption></figure><figure class="cell"><img src="assets/swin-shift.webp" alt="Shifted windows in Swin Transformer" width="1342" height="540"><figcaption>Swin bounds quadratic cost with equal 2D windows, then shifts boundaries between blocks.</figcaption></figure></div>
-
-          <div class="attention-anatomy">
-            <div class="attention-equation"><p class="micro-label">One head, one query voxel i</p><code>α<sub>ij</sub> = softmax<sub>j∈N(i)</sub> ((q<sub>i</sub><sup>T</sup>k<sub>j</sub>)/√d + b(Δp<sub>ij</sub>))</code><code>y<sub>i</sub> = Σ<sub>j∈N(i)</sub> α<sub>ij</sub>v<sub>j</sub></code></div>
-            <div class="attention-facts"><article><span>What is learned?</span><p><code>Q,K,V</code> make the mixing weight content-dependent. Unlike convolution, the same spatial offset does not imply the same weight for every scene.</p></article><article><span>Where is geometry?</span><p>Self-attention is permutation-equivariant by itself. Relative offsets, positional embeddings, or voxel coordinates must supply metric structure.</p></article><article><span>Where is sparsity?</span><p>Not in the equation. Sparsity lives in <code>N(i)</code>, the neighborhood policy chosen before the matrix multiplication.</p></article></div>
+        <section id="engines" class="article-section">
+          <p class="section-number">04</p>
+          <h2>The operator matured; the systems kept moving</h2>
+          <div class="prose">
+            <p>The history of sparse convolution has two phases. The first established the semantics of active sites and submanifold support. The second tried to make those semantics fast, general, and survivable inside real software stacks.</p>
           </div>
 
-          <div class="attention-lab" aria-labelledby="attention-lab-title">
-            <div class="lab-head lab-head--light"><div><span>interactive neighborhood topology</span><h3 id="attention-lab-title">The same tokens, four communication graphs</h3></div><div class="mode-buttons attention-mode-buttons" role="group" aria-label="Attention neighborhood type"><button type="button" data-attention-mode="global">Global</button><button type="button" data-attention-mode="window" class="is-active">Window</button><button type="button" data-attention-mode="knn">k-NN</button><button type="button" data-attention-mode="sets">Fixed sets</button></div></div>
-            <div class="attention-stage"><svg id="attention-svg" viewBox="0 0 760 440" role="img" aria-label="Sparse voxel tokens connected under different attention neighborhood policies"></svg><aside class="attention-readout"><p class="micro-label" id="attention-mode-name">Window attention</p><strong id="attention-score-count">—</strong><span>attention scores</span><dl><div><dt>Bound</dt><dd id="attention-complexity">Σ nᵥ²</dd></div><div><dt>Batch shape</dt><dd id="attention-shape">ragged</dd></div><div><dt>Hidden cost</dt><dd id="attention-hidden">padding / grouping</dd></div></dl><p id="attention-mode-note">Locality bounds the score matrix, but window occupancy follows the scene. Equal physical windows do not produce equal tensor shapes.</p></aside></div>
-            <div class="op-legend"><span><i class="query-dot"></i>selected query</span><span><i class="token-dot"></i>sparse voxel token</span><span><i class="attention-edge"></i>allowed communication</span></div>
+          <ol class="history-notes">
+            <li><time>2014–2015</time><div><h3>Spatially sparse CNNs</h3><p>Benjamin Graham’s early work stores only active features and performs computation around those sites, first for 2D handwriting and then for sparse 3D inputs. The basic idea predates today’s LiDAR tooling.</p></div></li>
+            <li><time>2017</time><div><h3>Submanifold sparse convolution</h3><p>Graham and van der Maaten make the output support equal to the input support for stride-1 layers. This stops dilation and enables deep networks on thin surfaces without progressively filling the volume.</p></div></li>
+            <li><time>2018</time><div><h3>SECOND and spconv</h3><p>Voxel-based 3D detection turns sparse 3D backbones into a practical default. The spconv ecosystem becomes deeply embedded in autonomous-driving codebases such as CenterPoint and OpenPCDet.</p></div></li>
+            <li><time>2019–2020</time><div><h3>MinkowskiEngine</h3><p>Generalized sparse convolution expands the abstraction to arbitrary dimensions, kernel shapes, pooling, pruning, transpose operations, and 4D space-time. Coordinate management becomes a first-class subsystem.</p></div></li>
+            <li><time>2021–2023</time><div><h3>spconv 2.x, TorchSparse, TorchSparse++</h3><p>Progress moves below the operator: Tensor Core mapping, implicit GEMM, locality-aware feature movement, mixed precision, kernel generation, and per-layer autotuning.</p></div></li>
+          </ol>
+
+          <h3 class="subheading">What should a practitioner use?</h3>
+          <div class="prose">
+            <p><strong>spconv 2.x</strong> is the pragmatic starting point for NVIDIA-based outdoor 3D detection. It fits the OpenPCDet and MMDetection3D world, provides optimized native and implicit-GEMM paths, and supports reduced precision. Its speed does not make the operators portable: deployment still needs a compatible sparse runtime or plugins.</p>
+            <p><strong>MinkowskiEngine</strong> is the stronger research abstraction when the problem needs generic 3D or 4D sparse tensor algebra, custom regions, segmentation, reconstruction, or coordinate-map reuse across a complex topology. That breadth comes with a heavier build and version-compatibility surface.</p>
+            <p><strong>TorchSparse++</strong> is the systems-first option. Its kernel generator and autotuner search across dataflows, targeting the fact that the best execution strategy changes with layer shape, precision, and hardware. Its author-reported performance is strong; its downstream ecosystem is smaller than spconv’s.</p>
+            <p><strong>SparseConvNet</strong> remains historically important and useful for understanding the original rulebook model, but it is no longer the default foundation for a new production stack.</p>
           </div>
 
-          <div class="complexity-ledger">
-            <div class="section-intro"><p class="micro-label">Complexity ledger</p><h3>Sparse tokens are necessary.<br>Bounded neighborhoods are decisive.</h3></div>
-            <div class="ledger-grid"><article><span>Global</span><code>O(N²d)</code><p>Every occupied voxel attends to every other. Removing empty cells helps, but <code>N≈4,200</code> still yields 17.6 million scores per head per layer.</p></article><article><span>Physical windows</span><code>O(Σ<sub>w</sub> n<sub>w</sub>²d)</code><p>Good locality and bounded scene extent. Runtime is sensitive to the densest windows, and raw batching is ragged.</p></article><article><span>k-NN / radius</span><code>O(Nkd) + query</code><p>Stable degree and geometry-aware neighbors. The neighbor search, dynamic graph, and gather pattern become the systems problem.</p></article><article class="is-focus"><span>Fixed-length sets</span><code>O(Sτ²d) ≈ O(Nτd)</code><p>Sort and index tokens into regular <code>τ × d</code> blocks. Standard batched attention becomes possible; duplicates and masks handle remainders.</p></article></div>
+          <table class="plain-table">
+            <thead><tr><th>Need</th><th>Reasonable first choice</th><th>Verify before committing</th></tr></thead>
+            <tbody><tr><td>LiDAR detection</td><td>spconv 2.x</td><td>Exact CUDA, precision, and deployment path</td></tr><tr><td>Generic 3D / 4D research</td><td>MinkowskiEngine</td><td>Build matrix and coordinate overhead</td></tr><tr><td>Kernel-level latency study</td><td>TorchSparse++</td><td>Model coverage and target-GPU benchmark</td></tr><tr><td>Standard ONNX / TensorRT graph</td><td>Dense pillars or a regularized transformer</td><td>End-to-end accuracy, not backbone latency alone</td></tr></tbody>
+          </table>
+
+          <aside class="margin-note"><strong>Deployment is an architectural constraint</strong><p>Do not train a sparse-convolution backbone and ask about export at the end. The coordinate manager and custom kernels are part of the model’s runtime semantics.</p></aside>
+        </section>
+
+        <section id="attention" class="article-section">
+          <p class="section-number">05</p>
+          <h2>Attention removes the lattice, not the irregularity</h2>
+          <div class="prose">
+            <p>A sparse transformer begins with an appealing observation: if every occupied voxel is already a row in <code>F</code>, treat those rows as tokens. Empty cells disappear from the sequence, and attention can mix information over a larger receptive field without repeatedly downsampling the XY plane.</p>
+            <p>For a query voxel <code>i</code>, one attention head computes:</p>
           </div>
 
-          <figure class="cell cell--wide breath"><img src="assets/regional-grouping.webp" alt="Regional grouping in a sparse transformer" width="1022" height="414"><figcaption>SST’s regional grouping exposes the core problem: physical locality is easy; balanced parallel work is not.</figcaption></figure>
+          <div class="equation-block equation-main"><code>α<sub>ij</sub> = softmax<sub>j∈N(i)</sub> ( q<sub>i</sub><sup>T</sup>k<sub>j</sub> / √d + b(Δp<sub>ij</sub>) )</code><code>y<sub>i</sub> = Σ<sub>j∈N(i)</sub> α<sub>ij</sub>v<sub>j</sub></code></div>
 
-          <div class="attention-arc">
-            <div class="section-intro"><p class="micro-label">Dense vision → sparse voxels</p><h3>Each model changes the neighborhood policy.</h3></div>
-            <ol><li><time>2020</time><h4>ViT</h4><p>Dense, global patch attention. Elegant sequence model; unsuitable for thousands of high-resolution voxels without locality.</p><code>N(i) = all patches</code></li><li><time>2021</time><h4>Swin</h4><p>Equal dense windows make attention hardware-friendly. Shifted windows create cross-window paths in the next block.</p><code>N(i) = same 2D window</code></li><li><time>2021</time><h4>VoTr</h4><p>Local and dilated voxel attention enlarge receptive field; Fast Voxel Query accelerates sparse neighbor lookup.</p><code>N(i) = queried voxels</code></li><li><time>2022</time><h4>SST</h4><p>Regional grouping supports a single-stride detector, preserving small objects while attention supplies receptive field.</p><code>N(i) = same region</code></li><li class="is-focus"><time>2023</time><h4>DSVT</h4><p>Dynamic sets regularize unequal window populations; X/Y order rotation and shifted/hybrid windows restore communication.</p><code>N(i) = same fixed set</code></li></ol>
+          <div class="prose">
+            <p>The content-dependent weight <code>α<sub>ij</sub></code> is the main modeling difference from convolution. A convolution learns one matrix per discrete offset. Attention lets the same two positions interact differently depending on their features.</p>
+            <p>But three design choices sit outside the equation:</p>
           </div>
 
-          <div class="attention-tradeoffs"><article><p class="micro-label">Attention gives</p><h3>Adaptive mixing</h3><ul><li>weights depend on scene content</li><li>receptive field can grow without XY downsampling</li><li>standard QKV/GEMM kernels are deployable once shapes are regular</li></ul></article><article><p class="micro-label">Attention still owes</p><h3>A geometry and systems policy</h3><ul><li>who is allowed to attend to whom</li><li>how relative 3D position enters the score</li><li>how disconnected groups exchange information</li><li>how ragged groups become bounded tensors</li></ul></article></div>
+          <ol class="reasoning-list">
+            <li><strong>Neighborhood.</strong> <code>N(i)</code> decides who can communicate and therefore where sparsity actually enters the operator.</li>
+            <li><strong>Geometry.</strong> Attention is permutation-equivariant without positional information. Relative offsets or coordinate embeddings must restore 3D metric structure.</li>
+            <li><strong>Batching.</strong> Physical neighborhoods contain different token counts. Efficient QKV kernels expect rectangular tensors.</li>
+          </ol>
 
-          <aside class="side-note"><span>Why single stride?</span><p>In a roughly 150 m × 150 m Waymo scene, a four-meter vehicle is already tiny. A sparse transformer can grow the effective receptive field through communication rather than repeated X/Y downsampling. The price is that its grouping scheme now carries the burden once handled by the convolutional pyramid.</p></aside>
-          <p class="chapter-bridge">This is the exact opening DSVT exploits: keep the sparse tokens, replace custom sparse-convolution feature kernels with standard batched attention, and spend architectural complexity on manufacturing regular sets.</p>
+          <figure class="sketch-figure wide-figure">
+            <svg viewBox="0 0 960 360" role="img" aria-labelledby="graphs-title">
+              <title id="graphs-title">Four neighborhood graphs for the same sparse tokens</title>
+              <defs><g id="token-cloud"><circle cx="35" cy="36" r="5"/><circle cx="75" cy="60" r="5"/><circle cx="116" cy="31" r="5"/><circle cx="159" cy="74" r="5"/><circle cx="52" cy="120" r="5"/><circle cx="104" cy="108" r="5"/><circle cx="148" cy="134" r="5"/><circle cx="190" cy="105" r="5"/><circle cx="82" cy="175" r="5"/><circle cx="137" cy="181" r="8" class="query-token"/><circle cx="184" cy="165" r="5"/></g></defs>
+              <g transform="translate(12 55)"><text x="0" y="-24" class="hand-label">global</text><g class="graph-lines global-lines"><path d="M137 181L35 36M137 181L75 60M137 181L116 31M137 181L159 74M137 181L52 120M137 181L104 108M137 181L148 134M137 181L190 105M137 181L82 175M137 181L184 165"/></g><use href="#token-cloud"/><text x="110" y="236" class="mono-label">N² scores</text></g>
+              <g transform="translate(252 55)"><text x="0" y="-24" class="hand-label">physical windows</text><rect x="12" y="10" width="104" height="104" class="window-outline"/><rect x="116" y="10" width="104" height="104" class="window-outline"/><rect x="12" y="114" width="104" height="104" class="window-outline"/><rect x="116" y="114" width="104" height="104" class="window-outline"/><g class="graph-lines"><path d="M137 181L104 108M137 181L148 134M137 181L184 165"/></g><use href="#token-cloud"/><text x="110" y="236" class="mono-label">Σ nᵥ² · ragged</text></g>
+              <g transform="translate(492 55)"><text x="0" y="-24" class="hand-label">k nearest neighbors</text><g class="graph-lines"><path d="M137 181L82 175M137 181L104 108M137 181L148 134M137 181L184 165"/></g><use href="#token-cloud"/><path d="M73 202c35 13 86 13 127 0" class="pencil-underline"/><text x="110" y="236" class="mono-label">N·k + neighbor query</text></g>
+              <g transform="translate(732 55)"><text x="0" y="-24" class="hand-label">fixed sets</text><path d="M21 23c63-20 120-9 156 45 20 31 16 76-11 104-43 44-110 36-141-8-32-45-29-109-4-141z" class="set-loop"/><g class="graph-lines"><path d="M137 181L82 175M137 181L104 108M137 181L148 134M137 181L184 165"/></g><use href="#token-cloud"/><text x="110" y="236" class="mono-label">S·τ² · regular</text></g>
+            </svg>
+            <figcaption>The attention matrix is dense inside the chosen neighborhood. Sparse attention is therefore a graph-construction problem before it is a matrix-multiplication problem.</figcaption>
+          </figure>
+
+          <h3 class="subheading">The four common neighborhood policies</h3>
+          <div class="prose">
+            <p><strong>Global attention</strong> is conceptually clean and computationally wrong for high-resolution outdoor voxels. Even <code>N = 4,200</code> produces <code>17.6 million</code> scores per head per layer.</p>
+            <p><strong>Window attention</strong> bounds the spatial extent and changes the cost to <code>Σ<sub>w</sub>n<sub>w</sub><sup>2</sup></code>. It inherits scene-dependent occupancy: a road window may contain almost nothing while a window around several vehicles is dense.</p>
+            <p><strong>k-NN or radius attention</strong> provides a geometric neighborhood with roughly stable degree. Once the graph exists, the tensor is regular enough; finding neighbors and gathering them is the irregular, often deployment-hostile part.</p>
+            <p><strong>Fixed-length set attention</strong> sorts and partitions local tokens into blocks of size <code>τ</code>. Its cost is approximately <code>O(Nτd)</code>, and standard batched attention can process every set. Remainders require duplicated indices and masks; disconnected sets require deliberate communication between layers.</p>
+          </div>
+
+          <h3 class="subheading">How the idea evolved</h3>
+          <div class="prose">
+            <p><strong>ViT</strong> established the image-as-token-sequence view, but its global dense attention assumes a manageable patch count. <strong>Swin</strong> replaced global attention with equal 2D windows and shifted the window boundaries between blocks. This made cost linear in image size and provided a communication path across windows.</p>
+            <p><strong>VoTr</strong> brought local and dilated attention to sparse voxels and introduced Fast Voxel Query to accelerate neighborhood lookup. <strong>SST</strong> used regional grouping to build a single-stride sparse transformer, motivated by the fact that a four-meter vehicle is tiny inside a roughly 150-meter scene. Receptive field comes from attention rather than repeated XY downsampling.</p>
+          </div>
+
+          <aside class="margin-note"><strong>A useful correction</strong><p>Attention is not inherently sparse, local, or deployment-friendly. QKV is standard linear algebra. The neighborhood construction surrounding it determines all three properties.</p></aside>
         </section>
 
-        <section class="chapter" id="dsvt" data-chapter="05">
-          <header class="chapter-head"><p class="chapter-no">05 / DSVT</p><h2>Not one idea.<br>A deployment-oriented pipeline.</h2><p>DSVT builds its 3D backbone from sorting, indexing, batched multi-head attention, and attention-style pooling—operations that deployment stacks already understand.</p></header>
-          <figure class="cell cell--wide"><img src="assets/dsvt-architecture.webp" alt="The DSVT block and complete perception architecture" width="1950" height="690"><figcaption>Top: X-axis and Y-axis layers form one DSVT block. Bottom: point cloud → voxelization → DSVT → BEV backbone → head.</figcaption></figure>
-          <div class="pipeline"><span>input<small>N × [x,y,z,…]</small></span><i>→</i><span>voxelize<small>M × [b,z,y,x]</small></span><i>→</i><span class="focus">DSVT<small>dynamic sets</small></span><i>→</i><span>BEV<small>dense map</small></span><i>→</i><span>head<small>boxes / map</small></span></div>
-          <div class="image-note breath"><figure class="cell"><img src="assets/voxel-zoom.webp" alt="Point cloud, voxel grid, and a local four-by-four crop" width="1125" height="613"><figcaption>Raw cloud → BEV voxel → a local 4 × 4 grid.</figcaption></figure><div class="parameter-list"><p><span>point-cloud range</span><code>[-54, -54, -5, 54, 54, 3]</code></p><p><span>voxel size</span><code>[0.3, 0.3, 8]</code></p><p><span>grid</span><code>360 × 360 = 129,600</code></p><p><span>non-empty</span><code>≈ 4,200</code></p></div></div>
+        <section id="regularity" class="article-section">
+          <p class="section-number">06</p>
+          <h2>The central systems problem is regularizing unequal work</h2>
+          <div class="prose">
+            <p>Sparse convolution and sparse attention appear to be different families, but their systems problems rhyme. Sparse convolution groups a variable number of valid pairs for each kernel offset. Window attention groups a variable number of tokens for each spatial window.</p>
+            <p>The GPU wants neither. It wants predictable tiles.</p>
+          </div>
+
+          <figure class="sketch-figure wide-figure">
+            <svg viewBox="0 0 930 410" role="img" aria-labelledby="regular-title">
+              <title id="regular-title">Three ways to batch windows with unequal token counts</title>
+              <g transform="translate(20 58)"><text x="0" y="-24" class="hand-label">raw windows</text><text x="16" y="18" class="mono-label">3</text><g class="token-stack"><circle cx="28" cy="50" r="7"/><circle cx="28" cy="78" r="7"/><circle cx="28" cy="106" r="7"/></g><text x="94" y="18" class="mono-label">11</text><g class="token-stack"><circle cx="106" cy="50" r="7"/><circle cx="106" cy="78" r="7"/><circle cx="106" cy="106" r="7"/><circle cx="106" cy="134" r="7"/><circle cx="106" cy="162" r="7"/><circle cx="106" cy="190" r="7"/><circle cx="106" cy="218" r="7"/><circle cx="106" cy="246" r="7"/><circle cx="106" cy="274" r="7"/><circle cx="106" cy="302" r="7"/><circle cx="106" cy="330" r="7"/></g><text x="172" y="18" class="mono-label">6</text><g class="token-stack"><circle cx="184" cy="50" r="7"/><circle cx="184" cy="78" r="7"/><circle cx="184" cy="106" r="7"/><circle cx="184" cy="134" r="7"/><circle cx="184" cy="162" r="7"/><circle cx="184" cy="190" r="7"/></g><text x="104" y="370" class="mono-label">ragged · cannot stack</text></g>
+              <path d="M245 205h44m-12-8 12 8-12 8" class="sketch-arrow"/>
+              <g transform="translate(318 58)"><text x="0" y="-24" class="hand-label">pad to the largest window</text><g class="padding-grid"><rect x="0" y="30" width="210" height="310"/><path d="M70 30v310M140 30v310M0 58h210M0 86h210M0 114h210M0 142h210M0 170h210M0 198h210M0 226h210M0 254h210M0 282h210M0 310h210"/></g><g class="pad-live"><rect x="0" y="30" width="70" height="84"/><rect x="70" y="30" width="70" height="308"/><rect x="140" y="30" width="70" height="168"/></g><text x="105" y="370" class="mono-label">33 slots · 13 wasted</text></g>
+              <path d="M553 205h44m-12-8 12 8-12 8" class="sketch-arrow"/>
+              <g transform="translate(626 58)"><text x="0" y="-24" class="hand-label">split into τ = 4 sets</text><g class="set-rows"><rect x="0" y="30" width="252" height="48"/><rect x="0" y="86" width="252" height="48"/><rect x="0" y="142" width="252" height="48"/><rect x="0" y="198" width="252" height="48"/><rect x="0" y="254" width="252" height="48"/></g><g class="set-slots"><path d="M63 30v272M126 30v272M189 30v272"/></g><g class="duplicate-marks"><path d="M205 54l30 0M205 222l30 0M205 278l30 0"/></g><text x="126" y="334" class="mono-label">5 × 4 regular slots</text><text x="126" y="370" class="mono-label">repeat + mask only the remainder</text></g>
+            </svg>
+            <figcaption>Padding follows the densest window. Dynamic set partitioning follows the actual number of tokens.</figcaption>
+          </figure>
+
+          <div class="prose">
+            <p>For a window with <code>N</code> occupied voxels and target set size <code>τ</code>, choose <code>S = ceil(N/τ)</code> sets. Sort the local voxels, sample exactly <code>τ</code> indices for each set, and mask any duplicated positions introduced by uneven division. Every attention call now sees the same <code>τ × d</code> shape.</p>
+            <p>This is an important kind of optimization: do not merely delete work; reshape the remaining work into something the hardware already executes well. The price is architectural state—sorting rules, masks, set size, and a strategy for crossing the artificial boundaries.</p>
+          </div>
+
+          <blockquote>Both sparse convolution and sparse attention save arithmetic by discovering a graph. Both become fast only after that graph is regularized into machine-friendly batches.</blockquote>
         </section>
 
-        <section class="chapter" id="sets" data-chapter="06">
-          <header class="chapter-head"><p class="chapter-no">06 / Voxels to tokens</p><h2>Unequal windows<br>must become equal tensors.</h2><p>Each window contains a different number <code>N</code> of non-empty voxels. Full padding wastes work; a Python loop over windows destroys parallelism. DSVT assigns each window as many fixed-length sets as its density requires, then batches every set together.</p></header>
-          <figure class="cell cell--wide"><img src="assets/window-pair.webp" alt="Unshifted and half-window-shifted partitions over the same point cloud" width="2003" height="666"><figcaption>The same cloud under shift = [0,0,0] and shift = [15,15,0].</figcaption></figure>
-          <div class="strip strip--3 breath"><figure class="cell"><img src="assets/window-counts.webp" alt="Windows labelled with their voxel and set counts" width="1104" height="1099"><figcaption>Voxel count and required set count.</figcaption></figure><figure class="cell"><img src="assets/sets-x.webp" alt="Equal-length sets under X-axis ordering" width="1121" height="1090"><figcaption>X-major ordering.</figcaption></figure><figure class="cell"><img src="assets/sets-y.webp" alt="Equal-length sets under Y-axis ordering" width="1107" height="1079"><figcaption>Y-major ordering.</figcaption></figure></div>
-          <div class="formula-layout"><div class="formula-copy"><p><span>number of sets</span><code>S = ceil(N / τ)</code></p><p><span>k-th index in set j</span><code>q<sup>j</sup><sub>k</sub> = floor(((jτ+k)/(Sτ)) · N)</code></p><p><span>gather</span><code>F<sub>j</sub>, O<sub>j</sub> = INDEX(V, Q<sub>j</sub>, D)</code></p><small>The sampling formula always emits <code>τ</code> positions. If division is uneven, a few indices repeat and are masked during attention.</small></div><figure class="cell"><img src="assets/set-formulas.webp" alt="Annotated DSVT equations for dynamic set partition" width="1616" height="1275"><figcaption>The original slide’s line-by-line notes on equations (2)–(4).</figcaption></figure></div>
-          <div class="shape-line"><span><b>74</b> occupied windows</span><i>→</i><span><b>98</b> dynamic sets</span><i>→</i><span><b>90</b> voxels per set</span><i>→</i><span><b>(2, 98, 90)</b> X/Y × set × token</span></div>
-          <p class="whisper">The leading dimension <code>2</code> is not batch size. It stores the X-axis and Y-axis partitions of the same voxels, exactly as in the official <code>set_voxel_inds</code> tensor.</p>
+        <section id="afterword" class="article-section afterword">
+          <p class="section-number">07 / afterword</p>
+          <h2>DSVT is one continuation, not the conclusion</h2>
+          <div class="prose">
+            <p>DSVT packages the fixed-set idea into a deployment-oriented 3D backbone. Within each physical window, it builds size-equivalent token sets so ordinary batched multi-head attention can process all local regions in parallel.</p>
+            <p>That regularity creates new information barriers, so consecutive layers sort the same voxels along different axes. X-major and Y-major orderings place different neighbors inside each set. Shifted or hybrid windows then change the larger spatial boundary between blocks. These are two separate communication mechanisms: rotated sets cross boundaries <em>inside</em> a window; shifted windows cross boundaries <em>between</em> windows.</p>
+          </div>
+
+          <figure class="sketch-figure wide-figure">
+            <svg viewBox="0 0 920 300" role="img" aria-labelledby="dsvt-title">
+              <title id="dsvt-title">DSVT as a chain of regularization and communication operations</title>
+              <g transform="translate(22 74)" class="pipeline-sketch"><rect width="120" height="92"/><text x="60" y="40" class="mono-label">sparse</text><text x="60" y="62" class="mono-label">voxels</text><path d="M120 46h48m-12-8 12 8-12 8"/><rect x="180" width="120" height="92"/><text x="240" y="40" class="mono-label">dynamic</text><text x="240" y="62" class="mono-label">sets</text><path d="M300 46h48m-12-8 12 8-12 8"/><rect x="360" width="120" height="92"/><text x="420" y="40" class="mono-label">X / Y</text><text x="420" y="62" class="mono-label">rotation</text><path d="M480 46h48m-12-8 12 8-12 8"/><rect x="540" width="120" height="92"/><text x="600" y="40" class="mono-label">shifted</text><text x="600" y="62" class="mono-label">windows</text><path d="M660 46h48m-12-8 12 8-12 8"/><rect x="720" width="150" height="92" class="accent-box"/><text x="795" y="40" class="mono-label">standard</text><text x="795" y="62" class="mono-label">attention</text></g><path d="M195 205c116 35 359 35 544 1" class="pencil-underline"/><text x="467" y="250" class="hand-label">a precise chain of fixes around one hardware constraint</text></svg>
+            <figcaption>DSVT replaces sparse-convolution feature kernels with regular attention, but spends design complexity on partitioning and communication.</figcaption>
+          </figure>
+
+          <div class="prose">
+            <p>The voxel version adds attention-style 3D pooling: a pooled feature becomes the query, while the original voxels provide keys and values. The official work shows that the resulting graph can be deployed with TensorRT and reports real-time inference.</p>
+            <p>The critical reading remains useful. DSVT is effective but trick-heavy. Dynamic sets, duplicated-token masks, two orderings, two window mechanisms, positional embeddings, and attention pooling solve distinct engineering seams. Unlike the residual shortcut in ResNet or the symmetric max reduction in PointNet, no single principle makes the architecture feel inevitable.</p>
+            <p>Its lasting lesson may therefore be broader than the model itself: when irregular geometry meets regular accelerators, much of architecture design becomes the art of manufacturing stable shapes without destroying the relationships the data needs.</p>
+          </div>
+
+          <figure class="source-figure wide-figure"><img src="assets/dsvt-architecture.webp" alt="The DSVT architecture from the original slide deck" width="1950" height="690"><figcaption>The original DSVT architecture, retained as a historical endpoint rather than the article’s organizing center.</figcaption></figure>
         </section>
 
-        <section class="chapter" id="rotation" data-chapter="07">
-          <header class="chapter-head"><p class="chapter-no">07 / Rotated sets</p><h2>Sort by X.<br>Then sort by Y.</h2><p>Attention inside a fixed set creates information islands. DSVT keeps the set size unchanged but changes the voxel ordering axis. Voxels separated in one layer can meet inside a set in the next.</p></header>
-          <div class="rotation-switch" role="group" aria-label="Rotated set view"><button type="button" data-axis="x" class="is-active">X-axis partition</button><button type="button" data-axis="y">Y-axis partition</button></div>
-          <div class="rotation-stage"><figure class="cell is-active" data-axis-panel="x"><img src="assets/sets-x.webp" alt="X-axis-major set partition" width="1121" height="1090"><figcaption>Layer l: X-axis-major order.</figcaption></figure><figure class="cell" data-axis-panel="y"><img src="assets/sets-y.webp" alt="Y-axis-major set partition" width="1107" height="1079"><figcaption>Layer l + 1: Y-axis-major order.</figcaption></figure><div class="rotation-copy"><code>V<sup>l</sup> = MHSA(INDEX(V<sup>l−1</sup>, Q, D<sub>x</sub>) + PE)</code><code>V<sup>l+1</sup> = MHSA(INDEX(V<sup>l</sup>, Q, D<sub>y</sub>) + PE)</code><p>Two attention layers, two orderings, one DSVT block.</p></div></div>
-          <div class="strip strip--4 breath"><figure class="cell"><img src="assets/shift-grid-zero.webp" alt="Unshifted windows over the point cloud" width="1143" height="1095"><figcaption>Window shift: zero.</figcaption></figure><figure class="cell"><img src="assets/shift-detail-zero.webp" alt="Sets inside an unshifted window" width="1099" height="1077"><figcaption>Inside one unshifted window.</figcaption></figure><figure class="cell"><img src="assets/shift-grid-half.webp" alt="Half-window-shifted windows" width="1191" height="1084"><figcaption>Window shift: half.</figcaption></figure><figure class="cell"><img src="assets/shift-detail-half.webp" alt="Sets inside a shifted window" width="1094" height="1092"><figcaption>Inside one shifted window.</figcaption></figure></div>
-          <div class="definition-pair"><p><span>Rotated set · intra-window</span>X/Y ordering alternates to cross set boundaries inside one window.</p><p><span>Shifted / hybrid window · inter-window</span>Window boundaries and shapes change between blocks to connect neighboring windows and trade accuracy for speed.</p></div>
-          <p class="whisper"><b>Do not conflate them.</b> The set ordering rotates; the window boundary shifts.</p>
+        <section class="conclusion">
+          <h2>What to remember</h2>
+          <ol><li>Sparsity is defined by an active coordinate set, not by zeros inside a dense tensor.</li><li>Submanifold convolution preserves support; regular and strided sparse convolutions intentionally change it.</li><li>The kernel map is the bridge from geometry to indexed linear algebra.</li><li>Sparse-convolution speed depends on mapping, feature movement, matrix shape, precision, and cache reuse—not FLOPs alone.</li><li>Sparse attention moves irregularity into neighborhood construction, positional geometry, and token batching.</li><li>Fast sparse systems do not only remove work. They regularize the remaining work.</li></ol>
         </section>
 
-        <section class="chapter" id="pooling" data-chapter="08">
-          <header class="chapter-head"><p class="chapter-no">08 / Pooling and deployment</p><h2>The last pieces:<br>3D pooling and a regular graph.</h2><p>DSVT-P uses pillars, where Z is already one. DSVT-V retains 3D voxels and must gradually reduce Z. A plain MLP or max pool underperforms, so the paper adds attention-style 3D pooling.</p></header>
-          <div class="pooling-diagram"><div class="pool-cube" aria-label="A two by two by two sparse pooling region"><span></span><span class="active"></span><span></span><span class="active"></span><span class="active"></span><span></span><span></span><span class="active"></span></div><i>→</i><div class="pool-query"><small>max pool</small><strong>Q</strong></div><div class="pool-kv"><small>original voxels</small><strong>K · V</strong></div><i>→</i><div class="pool-output"><small>attention</small><strong>1</strong><span>pooled token</span></div></div>
-          <div class="pool-formula"><code>P = MaxPool(p̃<sub>1…lwh</sub>)</code><code>P̃ = Attn(Q=P, KV=p̃<sub>1…lwh</sub>)</code></div>
-          <div class="speed-note"><strong>27<sup>Hz</sup></strong><div><h3>Fast is not only about doing less.</h3><p>It is also about presenting hardware with work it can execute well: fixed <code>S × τ × C</code> batches, standard attention, standard indexing, and no sparse-convolution backbone kernels. The paper reports 67 ms for DSVT-P and 37 ms after TensorRT on an A100.</p></div></div>
-          <ol class="summary-list"><li>LiDAR leaves roughly 96.7% of this BEV grid empty.</li><li>Dense convolution dilates active sites and their cost.</li><li>Sparse convolution saves work but introduces specialized mappings and kernels.</li><li>Transformers treat only non-empty voxels as tokens.</li><li>Single stride preserves small objects in X/Y.</li><li>Dynamic partition turns unequal windows into equal-length sets.</li><li>Rotated sets connect within windows; shifted windows connect across them.</li><li>Attention pooling handles Z while keeping the graph deployment-friendly.</li></ol>
+        <section class="source-section">
+          <div><p class="section-number">Source deck</p><h2>The original notes</h2><p>This reconstruction began with an early slide deck covering point-cloud sparsity, convolutional dilation, sparse convolution, ViT, Swin, SST, DSVT, dynamic sets, and shifted windows.</p><a href="DSVT_sparse_conv.pdf" download>Download the complete PDF <span>14.7 MB ↗</span></a></div>
         </section>
 
-        <section class="verdict" id="verdict" data-chapter="09">
-          <p class="chapter-no">09 / A restrained verdict</p><h2>Effective,<br>not elegant.</h2>
-          <div class="verdict-grid"><article><span>ResNet</span><h3>F(x) + x</h3><p>One shortcut addresses optimization, gradient flow, and degradation in deep networks. A small principle with broad consequences.</p></article><article><span>PointNet</span><h3>MLP + MAX</h3><p>A shared pointwise transform and one symmetric reduction resolve permutation invariance in a sentence.</p></article><article class="tricks"><span>DSVT</span><h3>A precise chain of fixes</h3><ul><li>unequal windows → dynamic sets</li><li>equal tensors → duplicate, then mask</li><li>isolated sets → X/Y reordering</li><li>isolated windows → shift and hybrid shapes</li><li>awkward Z reduction → attention pooling</li><li>difficult deployment → regularize everything into standard ops</li></ul></article></div>
-          <blockquote>Its beauty lies in closing every engineering seam—not in discovering one simple principle that makes the seams disappear.</blockquote>
-          <p class="verdict-copy">That is why DSVT feels powerful yet unmistakably trick-heavy. The reader must retain a set-size hyperparameter, two orderings, two kinds of window change, duplicated-token masks, and an extra pooling mechanism. None becomes a new foundational abstraction on its own. DSVT is best understood as a joint solution to sparsity, locality, parallelism, communication, and deployment—not as an architecture that falls naturally from a single first principle.</p>
+        <section class="references">
+          <h2>Primary references</h2>
+          <ol><li><a href="https://arxiv.org/abs/1409.6070">Graham, Spatially-sparse Convolutional Neural Networks, 2014</a></li><li><a href="https://arxiv.org/abs/1706.01307">Graham &amp; van der Maaten, Submanifold Sparse Convolutional Networks, 2017</a></li><li><a href="https://www.mdpi.com/1424-8220/18/10/3337">Yan et al., SECOND, 2018</a></li><li><a href="https://arxiv.org/abs/1904.08755">Choy et al., Minkowski Convolutional Neural Networks, 2019</a></li><li><a href="https://nvidia.github.io/MinkowskiEngine/sparse_tensor_network.html">MinkowskiEngine documentation: generalized sparse convolution</a></li><li><a href="https://github.com/traveller59/spconv">spconv 2.x official implementation</a></li><li><a href="https://arxiv.org/abs/2204.10319">Tang et al., TorchSparse, 2022</a></li><li><a href="https://arxiv.org/abs/2311.12862">Tang et al., TorchSparse++, 2023</a></li><li><a href="https://openaccess.thecvf.com/content/ICCV2021/html/Mao_Voxel_Transformer_for_3D_Object_Detection_ICCV_2021_paper.html">Mao et al., Voxel Transformer, 2021</a></li><li><a href="https://openaccess.thecvf.com/content/CVPR2022/html/Fan_Embracing_Single_Stride_3D_Object_Detector_With_Sparse_Transformer_CVPR_2022_paper.html">Fan et al., Single-stride Sparse Transformer, 2022</a></li><li><a href="https://openaccess.thecvf.com/content/CVPR2023/html/Wang_DSVT_Dynamic_Sparse_Voxel_Transformer_With_Rotated_Sets_CVPR_2023_paper.html">Wang et al., DSVT, 2023</a></li><li><a href="https://github.com/Haiyang-W/DSVT">Official DSVT implementation and deployment notes</a></li></ol>
         </section>
 
-        <section class="source-section" id="source"><div><p class="chapter-no">Source deck</p><h2>The complete original,<br>kept alongside the reconstruction.</h2><p>The essay follows the deck end to end: abstract, sparsity, dense convolution, sparse convolution, ViT, Swin, sparse transformers, single stride, DSVT structure, voxelization, window partition, <code>get_set</code>, set-to-token conversion, and shifted-window visualization. It adds the paper’s 3D pooling, deployment results, and a critical reading.</p><a class="download-deck" href="DSVT_sparse_conv.pdf" download>Download the complete PDF <span>14.7 MB ↗</span></a></div><figure class="cell"><img src="assets/source-title.webp" alt="The title block from the original slide deck" width="2346" height="760" loading="lazy"><figcaption>Original figures remain visible; the surrounding page now uses a quieter editorial palette.</figcaption></figure></section>
-        <section class="references"><h2>References</h2><ol><li><a href="https://arxiv.org/abs/1409.6070">Graham, Spatially-sparse Convolutional Neural Networks, 2014</a></li><li><a href="https://arxiv.org/abs/1706.01307">Graham &amp; van der Maaten, Submanifold Sparse Convolutional Networks, 2017</a></li><li><a href="https://www.mdpi.com/1424-8220/18/10/3337">Yan et al., SECOND, Sensors 2018</a></li><li><a href="https://arxiv.org/abs/1904.08755">Choy et al., Minkowski Convolutional Neural Networks, CVPR 2019</a></li><li><a href="https://nvidia.github.io/MinkowskiEngine/sparse_tensor_network.html">MinkowskiEngine, generalized sparse convolution and kernel maps</a></li><li><a href="https://github.com/traveller59/spconv">spconv 2.x, official implementation and performance guide</a></li><li><a href="https://arxiv.org/abs/2204.10319">Tang et al., TorchSparse, MLSys 2022</a></li><li><a href="https://arxiv.org/abs/2311.12862">Tang et al., TorchSparse++, MICRO 2023</a></li><li><a href="https://openaccess.thecvf.com/content/ICCV2021/html/Mao_Voxel_Transformer_for_3D_Object_Detection_ICCV_2021_paper.html">Mao et al., Voxel Transformer, ICCV 2021</a></li><li><a href="https://openaccess.thecvf.com/content/CVPR2022/html/Fan_Embracing_Single_Stride_3D_Object_Detector_With_Sparse_Transformer_CVPR_2022_paper.html">Fan et al., Single-stride Sparse Transformer, CVPR 2022</a></li><li><a href="https://openaccess.thecvf.com/content/CVPR2023/html/Wang_DSVT_Dynamic_Sparse_Voxel_Transformer_With_Rotated_Sets_CVPR_2023_paper.html">Wang et al., DSVT, CVPR 2023</a></li><li><a href="https://github.com/Haiyang-W/DSVT">Official DSVT implementation and TensorRT deployment</a></li><li><a href="https://arxiv.org/abs/2010.11929">Dosovitskiy et al., Vision Transformer, 2020</a></li><li><a href="https://arxiv.org/abs/2103.14030">Liu et al., Swin Transformer, 2021</a></li></ol><p>The new Sparse Conv and attention chapters use primary papers, official documentation, and official repositories. Framework speed figures are treated as author-reported and hardware-dependent. Images are reproduced from the user-provided deck for close reading.</p></section>
-        <footer class="article-end"><a href="/">← Blog</a><a href="#top">↑ Top</a></footer>
+        <footer class="article-end"><a href="/">← All posts</a><a href="#main">Back to top ↑</a></footer>
       </article>
     </main>
     <footer id="footer"><div class="footer-inner"><span>hova88 © 2026</span><a href="https://github.com/hova88">GitHub</a></div></footer>
   </div>
-  <script src="/js/main.js" defer></script><script src="/blog/sparse-conv-to-dsvt/dsvt.js?v=3" defer></script>
+  <script src="/js/main.js" defer></script>
+  <script src="/blog/sparse-conv-to-dsvt/dsvt.js?v=4" defer></script>
 </body>
 </html>
