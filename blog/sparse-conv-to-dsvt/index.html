@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="A visual worklog on sparse convolution, sparse attention, and the systems that make irregular 3D data computable.">
   <meta name="theme-color" content="#faf9f6">
-  <meta property="og:title" content="From Sparse to Structure">
+  <meta property="og:title" content="From Sparse to ...">
   <meta property="og:description" content="The technical history of sparse convolution and sparse attention, from coordinate maps to regular GPU batches.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/">
-  <meta property="og:image" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/assets/point-cloud.webp">
-  <title>From Sparse to Structure — hova</title>
+  <meta property="og:image" content="https://hova88.github.io/blog/sparse-conv-to-dsvt/assets/illustration-hero.webp">
+  <title>From Sparse to ... — hova</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/base.css">
-  <link rel="stylesheet" href="/blog/sparse-conv-to-dsvt/dsvt.css?v=4">
+  <link rel="stylesheet" href="/blog/sparse-conv-to-dsvt/dsvt.css?v=5">
 </head>
 <body class="sparse-article">
   <div id="reading-progress" aria-hidden="true"></div>
@@ -32,22 +32,13 @@
       <article class="article-shell">
         <header class="article-header">
           <p class="eyebrow">A visual worklog on irregular computation</p>
-          <h1>From Sparse<br>to Structure</h1>
+          <h1>From Sparse to ...</h1>
           <p class="subtitle">How sparse convolution and sparse attention turn empty 3D space into work a GPU can actually execute.</p>
           <div class="article-meta"><span>Yan Haixu</span><span>August 2026</span><span>28 min read</span></div>
         </header>
 
-        <figure class="hero-sketch wide-figure">
-          <svg viewBox="0 0 980 430" role="img" aria-labelledby="hero-title hero-desc">
-            <title id="hero-title">A dense grid becomes a sparse coordinate list and a structured batch</title>
-            <desc id="hero-desc">Three hand-drawn panels show a mostly empty spatial grid, compact coordinate-feature rows, and regular blocks for GPU computation.</desc>
-            <defs><pattern id="hero-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" class="grid-line"/></pattern></defs>
-            <g transform="translate(24 68)"><rect width="250" height="250" fill="url(#hero-grid)" class="paper-box"/><g class="voxel-marks"><circle cx="42" cy="70" r="7"/><circle cx="70" cy="70" r="7"/><circle cx="98" cy="98" r="7"/><circle cx="126" cy="126" r="7"/><circle cx="154" cy="126" r="7"/><circle cx="182" cy="154" r="7"/><circle cx="210" cy="210" r="7"/><circle cx="70" cy="210" r="7"/></g><text x="8" y="-22" class="hand-label">space is mostly empty</text><text x="125" y="282" class="mono-label">129,600 cells</text></g>
-            <path d="M294 192c28-24 45-24 73 0" class="sketch-arrow"/><path d="M357 183l12 9-14 6" class="sketch-arrow"/>
-            <g transform="translate(390 72)"><text x="0" y="-26" class="hand-label">keep only what exists</text><rect width="188" height="244" class="paper-box"/><text x="18" y="30" class="mono-label">C = [b, x, y, z]</text><text x="18" y="58" class="mono-label">F = [f₀ … f꜀]</text><g class="row-lines"><path d="M18 83h152M18 110h152M18 137h152M18 164h152M18 191h152M18 218h152"/></g><g class="row-dots"><circle cx="30" cy="83" r="4"/><circle cx="52" cy="110" r="4"/><circle cx="74" cy="137" r="4"/><circle cx="96" cy="164" r="4"/><circle cx="118" cy="191" r="4"/><circle cx="140" cy="218" r="4"/></g><text x="94" y="276" class="mono-label">4,200 rows</text></g>
-            <path d="M600 192c28-24 45-24 73 0" class="sketch-arrow"/><path d="M663 183l12 9-14 6" class="sketch-arrow"/>
-            <g transform="translate(700 72)"><text x="0" y="-26" class="hand-label">manufacture regular work</text><g class="batch-tiles"><rect x="0" y="0" width="72" height="72"/><rect x="78" y="0" width="72" height="72"/><rect x="156" y="0" width="72" height="72"/><rect x="0" y="78" width="72" height="72"/><rect x="78" y="78" width="72" height="72"/><rect x="156" y="78" width="72" height="72"/><rect x="0" y="156" width="72" height="72"/><rect x="78" y="156" width="72" height="72"/><rect x="156" y="156" width="72" height="72"/></g><g class="tile-hatch"><path d="M8 18h56M8 36h56M8 54h56M86 18h56M86 36h56M86 54h56M164 18h56M164 36h56M164 54h56M8 96h56M8 114h56M8 132h56M86 96h56M86 114h56M86 132h56M164 96h56M164 114h56M164 132h56M8 174h56M8 192h56M8 210h56M86 174h56M86 192h56M86 210h56M164 174h56M164 192h56M164 210h56"/></g><text x="114" y="276" class="mono-label">fixed tiles / sets</text></g>
-          </svg>
+        <figure class="generated-figure generated-figure--hero wide-figure">
+          <img src="assets/illustration-hero.webp" alt="Hand-drawn progression from sparse geometric space through coordinate and feature rows to regular GPU work" width="1899" height="828" fetchpriority="high">
           <figcaption>Sparsity is not a layer type. It is a negotiation between geometry, indexing, and hardware.</figcaption>
         </figure>
 
@@ -71,16 +62,8 @@
             <p>The cost is not only wasted multiplication. A regular <code>3 × 3</code> convolution produces an output wherever its receptive field contains at least one non-zero input. One active cell can therefore activate nine outputs. The next layer sees those new outputs as valid input and expands again.</p>
           </div>
 
-          <figure class="sketch-figure wide-figure">
-            <svg viewBox="0 0 920 300" role="img" aria-labelledby="dilation-title">
-              <title id="dilation-title">Active sites dilate under repeated dense convolution</title>
-              <defs><pattern id="small-grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" class="grid-line"/></pattern></defs>
-              <g transform="translate(30 42)"><text x="0" y="-16" class="hand-label">input</text><rect width="208" height="208" fill="url(#small-grid)" class="paper-box"/><g class="voxel-marks"><circle cx="65" cy="65" r="6"/><circle cx="91" cy="91" r="6"/><circle cx="117" cy="117" r="6"/><circle cx="143" cy="143" r="6"/></g></g>
-              <path d="M258 145h48m-12-8 12 8-12 8" class="sketch-arrow"/>
-              <g transform="translate(326 42)"><text x="0" y="-16" class="hand-label">after one layer</text><rect width="208" height="208" fill="url(#small-grid)" class="paper-box"/><g class="dilated-marks"><rect x="52" y="52" width="52" height="52"/><rect x="78" y="78" width="52" height="52"/><rect x="104" y="104" width="52" height="52"/><rect x="130" y="130" width="52" height="52"/></g></g>
-              <path d="M554 145h48m-12-8 12 8-12 8" class="sketch-arrow"/>
-              <g transform="translate(622 42)"><text x="0" y="-16" class="hand-label">after three layers</text><rect width="208" height="208" fill="url(#small-grid)" class="paper-box"/><path d="M39 39h78v26h26v26h26v26h26v78h-78v-26H91v-26H65v-26H39z" class="dilated-shape"/></g>
-            </svg>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-dilation.webp" alt="Hand-drawn comparison showing how dense convolution expands active sites while submanifold convolution preserves the original support" width="1774" height="887" loading="lazy">
             <figcaption>Submanifold dilation: the feature support grows even when the geometric object does not.</figcaption>
           </figure>
 
@@ -113,11 +96,10 @@
             <p>The multiplication is ordinary. The operator’s behavior comes from the policy used to construct <code>C<sub>out</sub></code>. This single point separates the main sparse-convolution variants.</p>
           </div>
 
-          <div class="operator-notes wide-figure">
-            <article><svg viewBox="0 0 230 145" aria-hidden="true"><defs><pattern id="op-grid-a" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" class="grid-line"/></pattern></defs><rect x="18" y="12" width="192" height="120" fill="url(#op-grid-a)" class="paper-box"/><g class="voxel-marks"><circle cx="54" cy="48" r="5"/><circle cx="78" cy="72" r="5"/><circle cx="102" cy="72" r="5"/><circle cx="126" cy="96" r="5"/></g><g class="output-halo"><circle cx="54" cy="48" r="13"/><circle cx="78" cy="72" r="13"/><circle cx="102" cy="72" r="13"/><circle cx="126" cy="96" r="13"/></g></svg><h3>Submanifold</h3><code>C<sub>out</sub> = C<sub>in</sub></code><p>Stride-1 layers preserve the active support. They mix features along an existing surface without creating new sites.</p></article>
-            <article><svg viewBox="0 0 230 145" aria-hidden="true"><rect x="18" y="12" width="192" height="120" fill="url(#op-grid-a)" class="paper-box"/><g class="regular-area"><rect x="42" y="36" width="72" height="72"/><rect x="90" y="60" width="72" height="72"/></g><g class="voxel-marks"><circle cx="78" cy="72" r="5"/><circle cx="126" cy="96" r="5"/></g></svg><h3>Regular sparse</h3><code>C<sub>out</sub> = reachable sites</code><p>New coordinates may be created. This is useful at stage transitions, but repeated stride-1 use brings dilation back.</p></article>
-            <article><svg viewBox="0 0 230 145" aria-hidden="true"><rect x="18" y="12" width="192" height="120" fill="url(#op-grid-a)" class="paper-box"/><g class="stride-boxes"><rect x="30" y="24" width="48" height="48"/><rect x="78" y="48" width="48" height="48"/><rect x="126" y="72" width="48" height="48"/></g><g class="voxel-marks"><circle cx="54" cy="48" r="5"/><circle cx="102" cy="72" r="5"/><circle cx="150" cy="96" r="5"/></g></svg><h3>Strided sparse</h3><code>stride &gt; 1</code><p>Coordinates are mapped onto a coarser lattice. Resolution falls while the receptive field and usually the channel count grow.</p></article>
-          </div>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-operators.webp" alt="Hand-drawn comparison of submanifold, regular sparse, and stride-two sparse convolution support policies" width="1921" height="819" loading="lazy">
+            <figcaption>Three operators, one algebra. Their real difference is the policy that constructs the output coordinate set.</figcaption>
+          </figure>
 
           <div class="prose">
             <p>A practical backbone therefore alternates two roles. Submanifold layers do most of the within-stage feature learning. Strided sparse layers change scale between stages. Inverse or transpose sparse convolutions reuse a previous coordinate relationship in reverse for U-Net decoders, reconstruction, or completion.</p>
@@ -134,16 +116,8 @@
 
           <div class="equation-block equation-main"><code>R<sub>δ</sub> = { (i, j) | C<sub>in</sub>[i] = C<sub>out</sub>[j] + δ }</code></div>
 
-          <figure class="sketch-figure wide-figure">
-            <svg viewBox="0 0 960 440" role="img" aria-labelledby="map-title">
-              <title id="map-title">Construction and execution of a sparse convolution kernel map</title>
-              <defs><pattern id="map-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" class="grid-line"/></pattern></defs>
-              <g transform="translate(28 80)"><text x="0" y="-28" class="hand-label">1. coordinate maps</text><rect width="240" height="240" fill="url(#map-grid)" class="paper-box"/><g class="indexed-dots"><circle cx="45" cy="45" r="8"/><text x="45" y="49">0</text><circle cx="75" cy="75" r="8"/><text x="75" y="79">1</text><circle cx="105" cy="75" r="8"/><text x="105" y="79">2</text><circle cx="135" cy="105" r="8"/><text x="135" y="109">3</text><circle cx="165" cy="135" r="8"/><text x="165" y="139">4</text><circle cx="195" cy="165" r="8"/><text x="195" y="169">5</text></g><path d="M30 336c54 20 121 18 191 1" class="pencil-underline"/><text x="120" y="366" class="mono-label">coord → row id</text></g>
-              <path d="M286 195h52m-12-8 12 8-12 8" class="sketch-arrow"/>
-              <g transform="translate(360 62)"><text x="0" y="-10" class="hand-label">2. rulebook / kernel map</text><rect y="30" width="236" height="282" class="paper-box"/><text x="20" y="62" class="mono-label">δ = (-1, 0)</text><text x="20" y="88" class="mono-label">input [1, 3, 4]</text><text x="20" y="110" class="mono-label">output [0, 2, 3]</text><path d="M18 130h200" class="row-separator"/><text x="20" y="160" class="mono-label">δ = ( 0, 0)</text><text x="20" y="186" class="mono-label">input [0, 1, 2, 3, 4, 5]</text><text x="20" y="208" class="mono-label">output [0, 1, 2, 3, 4, 5]</text><path d="M18 228h200" class="row-separator"/><text x="20" y="258" class="mono-label">δ = ( 1, 0)</text><text x="20" y="284" class="mono-label">input [0, 2, 3]</text><text x="20" y="306" class="mono-label">output [1, 3, 4]</text><path d="M20 338c42 15 119 13 188 0" class="pencil-underline"/><text x="118" y="366" class="mono-label">pairs grouped by offset</text></g>
-              <path d="M618 195h52m-12-8 12 8-12 8" class="sketch-arrow"/>
-              <g transform="translate(694 80)"><text x="0" y="-28" class="hand-label">3. feature execution</text><rect width="238" height="76" class="paper-box"/><text x="18" y="32" class="mono-label">gather F[input]</text><text x="18" y="56" class="mono-label">for each δ</text><path d="M119 76v42m-8-12 8 12 8-12" class="sketch-arrow"/><rect y="118" width="238" height="76" class="paper-box accent-box"/><text x="18" y="150" class="mono-label">GEMM with Wδ</text><text x="18" y="174" class="mono-label">many uneven groups</text><path d="M119 194v42m-8-12 8 12 8-12" class="sketch-arrow"/><rect y="236" width="238" height="76" class="paper-box"/><text x="18" y="268" class="mono-label">scatter-add Y[output]</text><text x="18" y="292" class="mono-label">accumulate offsets</text><path d="M22 340c48 13 132 16 193-1" class="pencil-underline"/><text x="119" y="366" class="mono-label">move → multiply → move</text></g>
-            </svg>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-kernel-map.webp" alt="Hand-drawn derivation of sparse coordinates into kernel-map row pairs followed by gather, dense GEMM, and scatter" width="1774" height="887" loading="lazy">
             <figcaption>The kernel map converts geometric sparsity into row-index pairs. After that, sparse convolution is indexed dense linear algebra.</figcaption>
           </figure>
 
@@ -172,13 +146,8 @@
             <p>Masked implicit GEMM takes the opposite approach: encode valid connections as masks and map the convolution into larger, more regular tiles that suit Tensor Cores. It can trade redundant arithmetic and mask processing for better utilization. Modern systems increasingly choose between these dataflows per layer instead of insisting on one universal kernel.</p>
           </div>
 
-          <figure class="sketch-figure wide-figure">
-            <svg viewBox="0 0 900 300" role="img" aria-labelledby="dataflow-title">
-              <title id="dataflow-title">Three sparse convolution execution strategies</title>
-              <g transform="translate(24 45)"><text x="0" y="-18" class="hand-label">gather · GEMM · scatter</text><g class="ragged-bars"><rect x="0" y="30" width="48" height="120"/><rect x="58" y="62" width="48" height="88"/><rect x="116" y="96" width="48" height="54"/></g><path d="M178 90h45m-12-8 12 8-12 8" class="sketch-arrow"/><rect x="235" y="42" width="72" height="96" class="accent-box"/><text x="271" y="94" class="mono-label">MM</text><text x="154" y="190" class="mono-label">uneven groups</text></g>
-              <g transform="translate(350 45)"><text x="0" y="-18" class="hand-label">masked implicit GEMM</text><g class="mask-grid"><rect x="0" y="30" width="210" height="120"/><path d="M0 60h210M0 90h210M0 120h210M42 30v120M84 30v120M126 30v120M168 30v120"/><rect x="0" y="30" width="42" height="30" class="mask-on"/><rect x="84" y="60" width="42" height="30" class="mask-on"/><rect x="168" y="120" width="42" height="30" class="mask-on"/></g><text x="105" y="190" class="mono-label">regular tile + validity mask</text></g>
-              <g transform="translate(650 45)"><text x="0" y="-18" class="hand-label">generated + autotuned</text><rect x="0" y="42" width="80" height="96" class="paper-box"/><text x="40" y="94" class="mono-label">layer</text><path d="M92 90h40" class="sketch-arrow"/><path d="M132 90l30-42M132 90l30 42" class="sketch-arrow"/><rect x="172" y="25" width="80" height="46" class="accent-box"/><rect x="172" y="109" width="80" height="46" class="paper-box"/><text x="212" y="53" class="mono-label">implicit</text><text x="212" y="137" class="mono-label">G-G-S</text><text x="126" y="190" class="mono-label">pick per shape / precision / GPU</text></g>
-            </svg>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-dataflows.webp" alt="Hand-drawn systems comparison of gather-GEMM-scatter, masked implicit GEMM, and per-layer autotuning" width="1825" height="862" loading="lazy">
             <figcaption>The mathematical operator stays fixed while the systems layer changes how irregular pairs become regular machine work.</figcaption>
           </figure>
         </section>
@@ -235,15 +204,8 @@
             <li><strong>Batching.</strong> Physical neighborhoods contain different token counts. Efficient QKV kernels expect rectangular tensors.</li>
           </ol>
 
-          <figure class="sketch-figure wide-figure">
-            <svg viewBox="0 0 960 360" role="img" aria-labelledby="graphs-title">
-              <title id="graphs-title">Four neighborhood graphs for the same sparse tokens</title>
-              <defs><g id="token-cloud"><circle cx="35" cy="36" r="5"/><circle cx="75" cy="60" r="5"/><circle cx="116" cy="31" r="5"/><circle cx="159" cy="74" r="5"/><circle cx="52" cy="120" r="5"/><circle cx="104" cy="108" r="5"/><circle cx="148" cy="134" r="5"/><circle cx="190" cy="105" r="5"/><circle cx="82" cy="175" r="5"/><circle cx="137" cy="181" r="8" class="query-token"/><circle cx="184" cy="165" r="5"/></g></defs>
-              <g transform="translate(12 55)"><text x="0" y="-24" class="hand-label">global</text><g class="graph-lines global-lines"><path d="M137 181L35 36M137 181L75 60M137 181L116 31M137 181L159 74M137 181L52 120M137 181L104 108M137 181L148 134M137 181L190 105M137 181L82 175M137 181L184 165"/></g><use href="#token-cloud"/><text x="110" y="236" class="mono-label">N² scores</text></g>
-              <g transform="translate(252 55)"><text x="0" y="-24" class="hand-label">physical windows</text><rect x="12" y="10" width="104" height="104" class="window-outline"/><rect x="116" y="10" width="104" height="104" class="window-outline"/><rect x="12" y="114" width="104" height="104" class="window-outline"/><rect x="116" y="114" width="104" height="104" class="window-outline"/><g class="graph-lines"><path d="M137 181L104 108M137 181L148 134M137 181L184 165"/></g><use href="#token-cloud"/><text x="110" y="236" class="mono-label">Σ nᵥ² · ragged</text></g>
-              <g transform="translate(492 55)"><text x="0" y="-24" class="hand-label">k nearest neighbors</text><g class="graph-lines"><path d="M137 181L82 175M137 181L104 108M137 181L148 134M137 181L184 165"/></g><use href="#token-cloud"/><path d="M73 202c35 13 86 13 127 0" class="pencil-underline"/><text x="110" y="236" class="mono-label">N·k + neighbor query</text></g>
-              <g transform="translate(732 55)"><text x="0" y="-24" class="hand-label">fixed sets</text><path d="M21 23c63-20 120-9 156 45 20 31 16 76-11 104-43 44-110 36-141-8-32-45-29-109-4-141z" class="set-loop"/><g class="graph-lines"><path d="M137 181L82 175M137 181L104 108M137 181L148 134M137 181L184 165"/></g><use href="#token-cloud"/><text x="110" y="236" class="mono-label">S·τ² · regular</text></g>
-            </svg>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-attention.webp" alt="Hand-drawn comparison of global, window, k-nearest-neighbor, and fixed-set sparse attention graphs and their costs" width="1672" height="941" loading="lazy">
             <figcaption>The attention matrix is dense inside the chosen neighborhood. Sparse attention is therefore a graph-construction problem before it is a matrix-multiplication problem.</figcaption>
           </figure>
 
@@ -272,15 +234,8 @@
             <p>The GPU wants neither. It wants predictable tiles.</p>
           </div>
 
-          <figure class="sketch-figure wide-figure">
-            <svg viewBox="0 0 930 410" role="img" aria-labelledby="regular-title">
-              <title id="regular-title">Three ways to batch windows with unequal token counts</title>
-              <g transform="translate(20 58)"><text x="0" y="-24" class="hand-label">raw windows</text><text x="16" y="18" class="mono-label">3</text><g class="token-stack"><circle cx="28" cy="50" r="7"/><circle cx="28" cy="78" r="7"/><circle cx="28" cy="106" r="7"/></g><text x="94" y="18" class="mono-label">11</text><g class="token-stack"><circle cx="106" cy="50" r="7"/><circle cx="106" cy="78" r="7"/><circle cx="106" cy="106" r="7"/><circle cx="106" cy="134" r="7"/><circle cx="106" cy="162" r="7"/><circle cx="106" cy="190" r="7"/><circle cx="106" cy="218" r="7"/><circle cx="106" cy="246" r="7"/><circle cx="106" cy="274" r="7"/><circle cx="106" cy="302" r="7"/><circle cx="106" cy="330" r="7"/></g><text x="172" y="18" class="mono-label">6</text><g class="token-stack"><circle cx="184" cy="50" r="7"/><circle cx="184" cy="78" r="7"/><circle cx="184" cy="106" r="7"/><circle cx="184" cy="134" r="7"/><circle cx="184" cy="162" r="7"/><circle cx="184" cy="190" r="7"/></g><text x="104" y="370" class="mono-label">ragged · cannot stack</text></g>
-              <path d="M245 205h44m-12-8 12 8-12 8" class="sketch-arrow"/>
-              <g transform="translate(318 58)"><text x="0" y="-24" class="hand-label">pad to the largest window</text><g class="padding-grid"><rect x="0" y="30" width="210" height="310"/><path d="M70 30v310M140 30v310M0 58h210M0 86h210M0 114h210M0 142h210M0 170h210M0 198h210M0 226h210M0 254h210M0 282h210M0 310h210"/></g><g class="pad-live"><rect x="0" y="30" width="70" height="84"/><rect x="70" y="30" width="70" height="308"/><rect x="140" y="30" width="70" height="168"/></g><text x="105" y="370" class="mono-label">33 slots · 13 wasted</text></g>
-              <path d="M553 205h44m-12-8 12 8-12 8" class="sketch-arrow"/>
-              <g transform="translate(626 58)"><text x="0" y="-24" class="hand-label">split into τ = 4 sets</text><g class="set-rows"><rect x="0" y="30" width="252" height="48"/><rect x="0" y="86" width="252" height="48"/><rect x="0" y="142" width="252" height="48"/><rect x="0" y="198" width="252" height="48"/><rect x="0" y="254" width="252" height="48"/></g><g class="set-slots"><path d="M63 30v272M126 30v272M189 30v272"/></g><g class="duplicate-marks"><path d="M205 54l30 0M205 222l30 0M205 278l30 0"/></g><text x="126" y="334" class="mono-label">5 × 4 regular slots</text><text x="126" y="370" class="mono-label">repeat + mask only the remainder</text></g>
-            </svg>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-batching.webp" alt="Hand-drawn progression from ragged sparse windows through wasteful max padding to equal fixed sets with repeat-and-mask" width="1672" height="941" loading="lazy">
             <figcaption>Padding follows the densest window. Dynamic set partitioning follows the actual number of tokens.</figcaption>
           </figure>
 
@@ -300,10 +255,8 @@
             <p>That regularity creates new information barriers, so consecutive layers sort the same voxels along different axes. X-major and Y-major orderings place different neighbors inside each set. Shifted or hybrid windows then change the larger spatial boundary between blocks. These are two separate communication mechanisms: rotated sets cross boundaries <em>inside</em> a window; shifted windows cross boundaries <em>between</em> windows.</p>
           </div>
 
-          <figure class="sketch-figure wide-figure">
-            <svg viewBox="0 0 920 300" role="img" aria-labelledby="dsvt-title">
-              <title id="dsvt-title">DSVT as a chain of regularization and communication operations</title>
-              <g transform="translate(22 74)" class="pipeline-sketch"><rect width="120" height="92"/><text x="60" y="40" class="mono-label">sparse</text><text x="60" y="62" class="mono-label">voxels</text><path d="M120 46h48m-12-8 12 8-12 8"/><rect x="180" width="120" height="92"/><text x="240" y="40" class="mono-label">dynamic</text><text x="240" y="62" class="mono-label">sets</text><path d="M300 46h48m-12-8 12 8-12 8"/><rect x="360" width="120" height="92"/><text x="420" y="40" class="mono-label">X / Y</text><text x="420" y="62" class="mono-label">rotation</text><path d="M480 46h48m-12-8 12 8-12 8"/><rect x="540" width="120" height="92"/><text x="600" y="40" class="mono-label">shifted</text><text x="600" y="62" class="mono-label">windows</text><path d="M660 46h48m-12-8 12 8-12 8"/><rect x="720" width="150" height="92" class="accent-box"/><text x="795" y="40" class="mono-label">standard</text><text x="795" y="62" class="mono-label">attention</text></g><path d="M195 205c116 35 359 35 544 1" class="pencil-underline"/><text x="467" y="250" class="hand-label">a precise chain of fixes around one hardware constraint</text></svg>
+          <figure class="generated-figure wide-figure">
+            <img src="assets/illustration-dsvt.webp" alt="Hand-drawn DSVT pipeline from sparse voxels to dynamic sets, alternating axis orders, shifted windows, and regular batched attention" width="1672" height="941" loading="lazy">
             <figcaption>DSVT replaces sparse-convolution feature kernels with regular attention, but spends design complexity on partitioning and communication.</figcaption>
           </figure>
 
@@ -336,6 +289,6 @@
     <footer id="footer"><div class="footer-inner"><span>hova88 © 2026</span><a href="https://github.com/hova88">GitHub</a></div></footer>
   </div>
   <script src="/js/main.js" defer></script>
-  <script src="/blog/sparse-conv-to-dsvt/dsvt.js?v=4" defer></script>
+  <script src="/blog/sparse-conv-to-dsvt/dsvt.js?v=5" defer></script>
 </body>
 </html>
